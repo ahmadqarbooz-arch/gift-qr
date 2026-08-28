@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم | الهدايا</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-wrap{max-width:760px;margin:30px auto;padding:20px}.admin-box{background:#fff;border-radius:24px;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,.08)}
+    label{display:block;font-weight:700;margin:14px 0 7px}input,textarea,select{width:100%;box-sizing:border-box;padding:13px;border:1px solid #ddd;border-radius:12px;font:inherit}textarea{min-height:130px;resize:vertical}
+    .admin-btn{margin-top:18px;width:100%;padding:14px;border:0;border-radius:14px;background:#222;color:#fff;font:inherit;font-weight:800;cursor:pointer}.preview{margin-top:22px;text-align:center}.preview img{max-width:220px;max-height:220px;border-radius:18px;object-fit:cover}.qr{margin:18px auto;display:flex;justify-content:center}.note{font-size:13px;opacity:.75;line-height:1.8}.result{margin-top:20px;padding:16px;border-radius:16px;background:#f7f7f7;display:none}.result a{word-break:break-all}
+  </style>
+</head>
+<body>
+  <main class="admin-wrap"><div class="admin-box">
+    <div class="badge">لوحة التحكم 🔐</div><h1>إنشاء هدية جديدة</h1>
+    <p class="note">هذه نسخة تجريبية: تحفظ الطلبات على هذا الجهاز فقط. بعد التجربة نربطها بقاعدة بيانات حتى تعمل من أي هاتف.</p>
+    <label>رقم الطلب</label><input id="order" placeholder="مثال: 001">
+    <label>اسم المستلم</label><input id="recipient" placeholder="مثال: أحمد">
+    <label>رسالة الهدية</label><textarea id="message" placeholder="اكتب رسالة الزبون هنا..."></textarea>
+    <label>الموسيقى</label><select id="music"><option value="">موسيقى رومانسية هادئة (تجريبية)</option></select>
+    <label>صورة الزبون</label><input id="photo" type="file" accept="image/*">
+    <div class="preview" id="preview"></div>
+    <button class="admin-btn" id="create">إنشاء الهدية + QR 🎁</button>
+    <div class="result" id="result"><b>تم إنشاء الهدية ✅</b><p>الرابط:</p><a id="link" target="_blank"></a><div class="qr" id="qr"></div><button class="admin-btn" id="open">فتح الهدية</button></div>
+  </div></main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
