@@ -1,51 +1,42 @@
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+const gift = document.getElementById('gift');
+const openBtn = document.getElementById('openBtn');
+const intro = document.getElementById('intro');
+const card = document.getElementById('card');
+const params = new URLSearchParams(location.search);
+const id = params.get('id');
+let audio;
 
-const openBtn = document.getElementById("openBtn");
-const musicBtn = document.getElementById("musicBtn");
-const cover = document.getElementById("cover");
-const gift = document.getElementById("gift");
+function loadGift(){
+  if(!id) return;
+  const raw=localStorage.getItem('gift_'+id); if(!raw) return;
+  const data=JSON.parse(raw);
+  document.getElementById('recipient').textContent=`إلى ${data.recipient} ❤️`;
+  document.getElementById('messageText').textContent=data.message;
+  const ph=document.querySelector('.photo-placeholder');
+  if(data.photo) ph.innerHTML=`<img src="${data.photo}" alt="صورة الهدية" style="width:100%;height:100%;object-fit:cover;border-radius:20px">`;
+}function openGift(){intro.classList.add('hidden');card.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});}
+if(gift) gift.addEventListener('click',openGift);
+if(gift) gift.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')openGift()});
+if(openBtn) openBtn.addEventListener('click',openGift);
 
-let giftData = null;
+const musicBtn=document.getElementById('musicBtn');
 
-if (id) {
-  try {
-    giftData = JSON.parse(localStorage.getItem("gift_" + id));
-  } catch (e) {
-    console.error("خطأ بقراءة بيانات الهدية:", e);
-  }
-}
-
-if (giftData) {
-  const title = document.querySelector("#gift h2");
-  const message = document.querySelector("#gift .message");
-  const image = document.querySelector("#gift img");
-
-  if (title && giftData.recipient) {
-    title.textContent = "إلى " + giftData.recipient + " ❤️";
-  }
-
-  if (message) {
-    message.textContent = giftData.message || "";
+if(musicBtn) musicBtn.addEventListener('click',()=>{
+  if(!audio){
+    audio=new Audio('https://cdn.pixabay.com/audio/2022/10/25/audio_946b7a0d2d.mp3');
+    audio.loop=true;
   }
 
-  if (image && giftData.photo) {
-    image.src = giftData.photo;
+  if(audio.paused){
+    audio.play().then(()=>{
+      musicBtn.textContent='⏸️ إيقاف الموسيقى';
+    }).catch(()=>{
+      alert('اضغط مرة ثانية للسماح بتشغيل الموسيقى 🎵');
+    });
+  } else {
+    audio.pause();
+    musicBtn.textContent='🎵 تشغيل الموسيقى';
   }
-}if (openBtn) {
-  openBtn.addEventListener("click", () => {
-    if (cover) {
-      cover.classList.add("hidden");
-    }
+});
 
-    if (gift) {
-      gift.classList.remove("hidden");
-    }
-  });
-}
-
-if (musicBtn) {
-  musicBtn.addEventListener("click", () => {
-    console.log("زر الموسيقى");
-  });
-}
+loadGift();
