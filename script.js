@@ -1,7 +1,7 @@
 const gift = document.getElementById('gift');
 const openBtn = document.getElementById('openBtn');
-const intro = document.getElementById('intro');
-const card = document.getElementById('card');
+const intro = document.getElementById('cover');
+const card = document.getElementById('gift');
 const params = new URLSearchParams(location.search);
 const id = params.get('id');
 let audio;
