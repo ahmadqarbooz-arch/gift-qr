@@ -1,30 +1,48 @@
-const gift = document.getElementById('gift');
-const openBtn = document.getElementById('openBtn');
-const cover = document.getElementById('cover');
-
-const params = new URLSearchParams(location.search);
-const id = params.get('id');
+const firebaseConfig = {
+  apiKey: "AIzaSyCLdoOE3Acurp2JSUrnEJuba-ZQL953sbs",
+  authDomain: "gift-qr-e2142.firebaseapp.com",
+  projectId: "gift-qr-e2142",
+  storageBucket: "gift-qr-e2142.firebasestorage.app",
+  messagingSenderId: "679349583021",
+  appId: "1:679349583021:web:fbfb21b5be3f62f12fda24"
+};
 
 let audio = null;
 
-function loadGift() {
+async function loadGift() {
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id");
+
   if (!id) return;
 
-  const raw = localStorage.getItem('gift_' + id);
-  if (!raw) return;
-
   try {
-    const data = JSON.parse(raw);
+    const { initializeApp } =
+      await import("https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js");
 
-    const recipient = document.getElementById('recipient');
-    const message = document.getElementById('messageText');
-    const photo = document.querySelector('.photo-placeholder');
+    const { getFirestore, doc, getDoc } =
+      await import("https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js");
 
-    if (recipient) {
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const giftDoc = await getDoc(doc(db, "gifts", id));
+
+    if (!giftDoc.exists()) {
+      console.error("Gift not found");
+      return;
+    }
+
+    const data = giftDoc.data();
+
+    const recipient = document.getElementById("recipient");
+    const message = document.getElementById("messageText");
+    const photo = document.querySelector(".photo-placeholder");
+
+    if (recipient && data.recipient) {
       recipient.textContent = `إلى ${data.recipient} ❤️`;
     }
 
-    if (message) {
+    if (message && data.message) {
       message.textContent = data.message;
     }
 
@@ -37,38 +55,44 @@ function loadGift() {
         >
       `;
     }
+
   } catch (error) {
-    console.error('Gift loading error:', error);
+    console.error("Gift loading error:", error);
   }
 }
 
 function openGift() {
+  const cover = document.getElementById("cover");
+  const gift = document.getElementById("gift");
+
   if (cover) {
-    cover.classList.add('hidden');
+    cover.classList.add("hidden");
   }
 
   if (gift) {
-    gift.classList.remove('hidden');
+    gift.classList.remove("hidden");
   }
 
   window.scrollTo({
     top: 0,
-    behavior: 'smooth'
+    behavior: "smooth"
   });
 }
 
+const openBtn = document.getElementById("openGiftButton");
+
 if (openBtn) {
-  openBtn.addEventListener('click', openGift);
+  openBtn.addEventListener("click", openGift);
 }
 
-const musicBtn = document.getElementById('musicBtn');
+const musicBtn = document.getElementById("musicBtn");
 
 if (musicBtn) {
-  musicBtn.addEventListener('click', () => {
+  musicBtn.addEventListener("click", () => {
 
     if (!audio) {
       audio = new Audio(
-        'https://cdn.pixabay.com/audio/2022/10/25/audio_946b7a0d2d.mp3'
+        "https://cdn.pixabay.com/audio/2022/10/25/audio_946b7a0d2d.mp3"
       );
 
       audio.loop = true;
@@ -76,16 +100,10 @@ if (musicBtn) {
 
     if (audio.paused) {
       audio.play().then(() => {
-        musicBtn.textContent = '⏸️ إيقاف الموسيقى';
+        musicBtn.textContent = "⏸️ إيقاف الموسيقى";
       }).catch(() => {
-        alert('اضغط مرة ثانية للسماح بتشغيل الموسيقى 🎵');
+        alert("🎵 اضغط مرة ثانية للسماح بتشغيل الموسيقى");
       });
     } else {
       audio.pause();
-      musicBtn.textContent = '🎵 تشغيل الموسيقى';
-    }
-
-  });
-}
-
-loadGift();
+      musicBtn.textContent = "🎵 تشغيل الموسيقى";
