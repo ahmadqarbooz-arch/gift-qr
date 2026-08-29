@@ -14,10 +14,15 @@ function loadGift(){
   document.getElementById('messageText').textContent=data.message;
   const ph=document.querySelector('.photo-placeholder');
   if(data.photo) ph.innerHTML=`<img src="${data.photo}" alt="صورة الهدية" style="width:100%;height:100%;object-fit:cover;border-radius:20px">`;
-}function openGift(){intro.classList.add('hidden');card.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});}
-if(gift) gift.addEventListener('click',openGift);
-if(gift) gift.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')openGift()});
-if(openBtn) openBtn.addEventListener('click',openGift);
+function openGift(){
+  intro.classList.add('hidden');
+  card.classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+if(openBtn){
+  openBtn.addEventListener('click',openGift);
+}
 
 const musicBtn=document.getElementById('musicBtn');
 
