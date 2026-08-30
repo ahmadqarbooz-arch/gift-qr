@@ -1,6 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>هدية خاصة لك 🎁</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f8bbd0;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .gift-icon {
+      width: 80px;
+      margin-bottom: 15px;
+    }
+    h1 {
+      color: #333;
+      font-size: 22px;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .btn-open {
+      background: linear-gradient(45deg, #ff4081, #d81b60);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 25px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(216, 27, 96, 0.3);
+      width: 100%;
+      margin-top: 15px;
+    }
+    .recipient-title {
+      color: #333;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    p {
+      color: #333;
+      font-size: 16px;
+      line-height: 1.6;
+      white-space: pre-line;
+      word-break: break-word;
+      text-align: right;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 15px;
+      margin-top: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    audio {
+      width: 100%;
+      margin-top: 15px;
+    }
+    .loading {
+      font-size: 18px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" id="giftCard">
+  <div class="loading" id="loadingText">جاري تحميل الهدية... 🎁</div>
+  
+  <!-- الشاشة الأولى: غلاف المفاجأة (مثل الصورة) -->
+  <div id="coverScreen" style="display: none;">
+    <div style="font-size: 60px; margin-bottom: 10px;">🎁</div>
+    <h1 id="coverName">وصلتك هدية خاصة!</h1>
+    <p style="font-size: 14px; color: #777; text-align: center;">اضغط على الزر بالأسفل لرؤية المفاجأة</p>
+    <button class="btn-open" onclick="showGiftContent()">افتح الهدية ✨</button>
+  </div>
+
+  <!-- الشاشة الثانية: محتوى الهدية -->
+  <div id="giftContent" style="display: none;">
+    <div style="font-size: 22px; margin-bottom: 10px;">✨ 🎉 ✨</div>
+    <div class="recipient-title" id="title"></div>
+    <div id="imageContainer"></div>
+    <p id="message"></p>
+    <div id="audioPlayer"></div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     authDomain: "gift-qr-e2142.firebaseapp.com",
@@ -11,78 +114,65 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const form = document.getElementById('giftForm');
-  const submitBtn = document.getElementById('submitBtn');
-  let currentGiftUrl = "";
+  const urlParams = new URLSearchParams(window.location.search);
+  const giftId = urlParams.get('id');
 
-  function convertBase64(file) {
-    return new Promise((resolve, reject) => {
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file);
-      fileReader.onload = () => resolve(fileReader.result);
-      fileReader.onerror = (error) => reject(error);
+  if (giftId) {
+    const docRef = doc(db, "gifts", giftId);
+    getDoc(docRef).then((docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        
+        // جلب الاسم والتأكد من أنه ليس undefined
+        const name = data.recipientName || data.name || data.to || "";
+
+        document.getElementById('loadingText').style.display = 'none';
+        document.getElementById('coverScreen').style.display = 'block';
+
+        // الشاشة الأولى
+        if (name && name.trim() !== "") {
+          document.getElementById('coverName').innerText = `وصلتك هدية خاصة يا ${name} 🎁!`;
+          document.getElementById('title').innerText = `إلى: ${name}`;
+        } else {
+          document.getElementById('coverName').innerText = `وصلتك هدية خاصة 🎁!`;
+          document.getElementById('title').innerText = `إلى أغلى الناس ❤️`;
+        }
+
+        // الشاشة الثانية
+        document.getElementById('message').innerText = data.message || "";
+
+        if (data.imageUrl && data.imageUrl.trim() !== "") {
+          document.getElementById('imageContainer').innerHTML = `<img src="${data.imageUrl}" alt="صورة الهدية">`;
+        }
+
+        if (data.audioUrl && data.audioUrl.trim() !== "") {
+          document.getElementById('audioPlayer').innerHTML = `
+            <audio id="bgAudio" controls style="margin-top:15px;">
+              <source src="${data.audioUrl}" type="audio/mpeg">
+            </audio>
+          `;
+        }
+      } else {
+        document.getElementById('loadingText').innerText = "عذراً، لم يتم العثور على الهدية! ❌";
+      }
+    }).catch((error) => {
+      document.getElementById('loadingText').innerText = "حدث خطأ أثناء تحميل الهدية.";
     });
+  } else {
+    document.getElementById('loadingText').innerText = "رابط الهدية غير صحيح! ❌";
   }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    submitBtn.disabled = true;
-    submitBtn.innerText = "جاري إنشاء الهدية والبار كود... ⏳";
-
-    try {
-      const recipientName = document.getElementById('recipientName').value;
-      const message = document.getElementById('message').value;
-      const fileInput = document.getElementById('imageFile');
-      let imageUrl = "";
-
-      if (fileInput.files.length > 0) {
-        imageUrl = await convertBase64(fileInput.files[0]);
-      }
-
-      const docRef = await addDoc(collection(db, "gifts"), {
-        recipientName: recipientName,
-        message: message,
-        imageUrl: imageUrl,
-        createdAt: new Date()
-      });
-
-      const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-      currentGiftUrl = `${baseUrl}/index.html?id=${docRef.id}`;
-
-      document.getElementById('qrcode').innerHTML = "";
-      new QRCode(document.getElementById("qrcode"), {
-        text: currentGiftUrl,
-        width: 180,
-        height: 180
-      });
-
-      document.getElementById('giftUrlText').innerText = currentGiftUrl;
-      document.getElementById('formArea').style.display = 'none';
-      document.getElementById('resultArea').style.display = 'block';
-
-    } catch (error) {
-      alert("حدث خطأ أثناء حفظ الهدية: " + error.message);
-      submitBtn.disabled = false;
-      submitBtn.innerText = "إنشاء الهدية والبار كود 🚀";
+  window.showGiftContent = function() {
+    document.getElementById('coverScreen').style.display = 'none';
+    document.getElementById('giftContent').style.display = 'block';
+    
+    // تشغيل الأغنية تلقائياً عند فتح الهدية
+    const audio = document.getElementById('bgAudio');
+    if (audio) {
+      audio.play().catch(() => {});
     }
-  });
-
-  window.copyGiftUrl = function() {
-    navigator.clipboard.writeText(currentGiftUrl);
-    alert("تم نسخ رابط الهدية بنجاح! 📋");
-  };
-
-  window.openGift = function() {
-    window.open(currentGiftUrl, '_blank');
-  };
-
-  window.resetForm = function() {
-    form.reset();
-    submitBtn.disabled = false;
-    submitBtn.innerText = "إنشاء الهدية والبار كود 🚀";
-    document.getElementById('formArea').style.display = 'block';
-    document.getElementById('resultArea').style.display = 'none';
   };
 </script>
+
 </body>
 </html>
