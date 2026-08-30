@@ -1,70 +1,111 @@
-const photo = document.getElementById("photo");
-const preview = document.getElementById("preview");
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-let photoData = "";
+const firebaseConfig = {
+  apiKey: "AIzaSyCLdoOE3Acurp2JSUrnEJuba-ZQL953sbs",
+  authDomain: "gift-qr-e2142.firebaseapp.com",
+  projectId: "gift-qr-e2142",
+  storageBucket: "gift-qr-e2142.firebasestorage.app",
+  messagingSenderId: "679349583021",
+  appId: "1:679349583021:web:fbfb21b5be3f62f12fda24"
+};
 
-photo.addEventListener("change", () => {
-  const file = photo.files[0];
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  if (!file) return;
+const form = document.getElementById("giftForm");
+const recipientInput = document.getElementById("recipient");
+const messageInput = document.getElementById("message");
+const photoInput = document.getElementById("photo");
+const createButton = document.getElementById("createGiftButton");
+const result = document.getElementById("result");
+const giftLink = document.getElementById("giftLink");
+const copyButton = document.getElementById("copyLinkButton");
+const openLink = document.getElementById("openGiftLink");
 
-  const reader = new FileReader();
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-  reader.onload = (e) => {
-    photoData = e.target.result;
+  createButton.disabled = true;
+  createButton.textContent = "جاري إنشاء الهدية...";
 
-    preview.innerHTML =
-      `<img src="${photoData}" alt="صورة الهدية">`;
-  };
+  try {
+    const recipient = recipientInput.value.trim();
+    const message = messageInput.value.trim();
 
-  reader.readAsDataURL(file);
-});
+    let photo = "";
 
-document.getElementById("create").addEventListener("click", () => {
+    if (photoInput.files.length > 0) {
+      const file = photoInput.files[0];
 
-  const order = document.getElementById("order").value.trim();
-  const recipient = document.getElementById("recipient").value.trim();
-  const message = document.getElementById("message").value.trim();
+      if (file.size > 800000) {
+        throw new Error("حجم الصورة كبير جدًا. اختر صورة أصغر من 800KB.");
+      }
 
-  if (!order || !recipient || !message || !photoData) {
-    alert("رجاءً املأ جميع الخانات واختر الصورة ❤️");
-    return;
+      photo = await fileToBase64(file);
+    }
+
+    const giftData = {
+      recipient,
+      message,
+      photo,
+      createdAt: new Date().toISOString()
+    };
+
+    const giftRef = await addDoc(
+      collection(db, "gifts"),
+      giftData
+    );
+
+    const url =
+      `${window.location.origin}${window.location.pathname.replace("admin.html", "index.html")}?id=${giftRef.id}`;
+
+    giftLink.textContent = url;
+    openLink.href = url;
+
+    result.classList.remove("hidden");
+
+    form.reset();
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "حدث خطأ أثناء إنشاء الهدية.");
+
+  } finally {
+    createButton.disabled = false;
+    createButton.textContent = "إنشاء الهدية 🎁";
   }
-
-  const data = {
-    order: order,
-    recipient: recipient,
-    message: message,
-    photo: photoData
-  };
-
-  const encoded = btoa(
-    encodeURIComponent(JSON.stringify(data))
-  );
-
-  const url =
-    new URL("index.html", window.location.href);
-
-  url.searchParams.set("gift", encoded);
-
-  const link = document.getElementById("link");
-  link.href = url.href;
-  link.textContent = url.href;
-
-  const qr = document.getElementById("qr");
-
-  qr.innerHTML = `
-    <img
-      src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url.href)}"
-      width="220"
-      height="220"
-      alt="QR Code"
-    >
-  `;
-
-  document.getElementById("open").onclick = () => {
-    window.location.href = url.href;
-  };
-
-  document.getElementById("result").style.display = "block";
 });
+
+copyButton.addEventListener("click", async () => {
+  const url = giftLink.textContent;
+
+  try {
+    await navigator.clipboard.writeText(url);
+    copyButton.textContent = "تم نسخ الرابط ✅";
+
+    setTimeout(() => {
+      copyButton.textContent = "📋 نسخ الرابط";
+    }, 2000);
+
+  } catch {
+    alert("تعذر نسخ الرابط. انسخه يدويًا.");
+  }
+});
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(
+      new Error("تعذر قراءة الصورة.")
+    );
+
+    reader.readAsDataURL(file);
+  });
+}
