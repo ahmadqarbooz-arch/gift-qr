@@ -1,249 +1,157 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;
+  font-family:Arial,Tahoma,sans-serif;
+  background:linear-gradient(135deg,#fff0f5,#ffe4ec);
+  color:#4a2630;
 }
-
-body {
-  font-family: Arial, sans-serif;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #ffe4ec, #fff5f8);
-  color: #333;
+.hidden{display:none!important}
+button{
+  border:0;
+  cursor:pointer;
+  font-family:inherit;
 }
-
-.hidden {
-  display: none !important;
+.screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  text-align:center;
 }
-
-/* شاشات التحميل والخطأ */
-
-.screen {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  text-align: center;
+.loading-box,.error-box,.cover,.gift-content{
+  background:#fff;
+  border-radius:25px;
+  padding:30px 20px;
+  box-shadow:0 15px 40px #8b3a4d22;
 }
-
-/* التحميل */
-
-.loader {
-  font-size: 55px;
-  animation: heartbeat 1.2s infinite;
-  margin-bottom: 15px;
+.loading-box,.error-box{width:100%;max-width:400px}
+.loader-heart{font-size:55px;animation:pulse 1s infinite}
+.loading-box h2{margin:15px 0 8px}
+.loading-box p,.cover p,.error-box p{color:#765862}
+.loading-dots{margin-top:15px}
+.loading-dots span{
+  display:inline-block;
+  width:9px;
+  height:9px;
+  margin:4px;
+  border-radius:50%;
+  background:#e85d7a;
+  animation:dot 1s infinite;
 }
-
-@keyframes heartbeat {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.2);
-  }
-
-  100% {
-    transform: scale(1);
-  }
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+.error-icon{font-size:50px}
+.error-box button{
+  margin-top:20px;
+  padding:12px 25px;
+  border-radius:30px;
+  background:#e85d7a;
+  color:white;
 }
-
-/* الخطأ */
-
-.error-box {
-  background: white;
-  width: 100%;
-  max-width: 420px;
-  padding: 35px 25px;
-  border-radius: 25px;
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+.gift-page{
+  min-height:100vh;
+  padding:25px 15px 45px;
 }
-
-.error-icon {
-  font-size: 55px;
-  margin-bottom: 15px;
+.gift-card{
+  max-width:650px;
+  margin:auto;
+  text-align:center;
 }
-
-.error-box h1 {
-  margin-bottom: 12px;
+.gift-top{
+  font-size:25px;
+  margin-bottom:15px;
 }
-
-.error-box p {
-  color: #666;
-  line-height: 1.8;
-  margin-bottom: 25px;
+.heart-small{
+  display:inline-block;
+  margin:0 20px;
+  font-size:35px;
+  animation:pulse 1.3s infinite;
 }
-
-.error-box button {
-  border: none;
-  background: #e91e63;
-  color: white;
-  padding: 12px 25px;
-  border-radius: 30px;
-  font-size: 16px;
-  cursor: pointer;
+.gift-title{
+  font-size:clamp(28px,8vw,42px);
+  color:#9e304d;
 }
-
-/* صفحة الهدية */
-
-.gift-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 25px 15px;
+.gift-subtitle{
+  margin:12px 0 25px;
+  color:#765862;
 }
-
-.gift-card {
-  width: 100%;
-  max-width: 520px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 30px;
-  padding: 30px 22px;
-  text-align: center;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+.cover-decoration{font-size:70px}
+.cover h2{margin:15px 0 8px}
+.open-gift-button{
+  margin-top:10px;
+  padding:16px 30px;
+  border-radius:50px;
+  background:#e85d7a;
+  color:white;
+  font-size:18px;
+  font-weight:bold;
 }
-
-/* رأس الهدية */
-
-.gift-header {
-  margin-bottom: 25px;
+.gift-content{animation:show .6s}
+.gift-header{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  align-items:center;
 }
-
-.heart {
-  font-size: 55px;
-  margin-bottom: 10px;
-  animation: heartbeat 1.5s infinite;
+.gift-header h2{color:#9e304d}
+.recipient{
+  margin:20px 0;
+  font-size:23px;
+  font-weight:bold;
+  color:#c9365a;
 }
-
-.gift-header h1 {
-  font-size: 30px;
-  margin-bottom: 10px;
+.photo-container{
+  max-width:520px;
+  min-height:100px;
+  margin:auto auto 20px;
+  border-radius:20px;
+  overflow:hidden;
+  background:#fff1f5;
 }
-
-.gift-header p {
-  color: #777;
-  font-size: 16px;
+.photo-container img{
+  display:block;
+  width:100%;
+  max-height:500px;
+  object-fit:cover;
 }
-
-/* صورة الهدية */
-
-.image-container {
-  width: 100%;
-  margin-bottom: 25px;
-  overflow: hidden;
-  border-radius: 22px;
+.photo-placeholder{
+  min-height:150px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:60px;
 }
-
-.image-container img {
-  width: 100%;
-  max-height: 420px;
-  object-fit: cover;
-  display: block;
+.message-box{
+  background:#fff5f8;
+  border-radius:20px;
+  padding:20px;
 }
-
-/* الرسالة */
-
-.gift-message {
-  background: #fff0f5;
-  padding: 20px;
-  border-radius: 20px;
-  margin-bottom: 25px;
+.message-icon{font-size:30px}
+.message-text{
+  margin-top:10px;
+  white-space:pre-wrap;
+  line-height:2;
+  font-size:18px;
 }
-
-.gift-message p {
-  font-size: 18px;
-  line-height: 1.9;
-  white-space: pre-wrap;
+.music-button{
+  margin-top:20px;
+  padding:13px 22px;
+  border-radius:30px;
+  background:#f4d4dc;
+  color:#7e2942;
 }
-
-/* زر فتح الهدية */
-
-.open-gift-button {
-  width: 100%;
-  border: none;
-  background: linear-gradient(135deg, #e91e63, #f06292);
-  color: white;
-  padding: 16px 20px;
-  border-radius: 50px;
-  font-size: 19px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(233, 30, 99, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+.bottom-hearts{
+  margin-top:25px;
+  letter-spacing:5px;
 }
-
-.open-gift-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(233, 30, 99, 0.35);
+@keyframes pulse{
+  50%{transform:scale(1.15)}
 }
-
-.open-gift-button:active {
-  transform: scale(0.98);
+@keyframes dot{
+  50%{opacity:.2;transform:translateY(-5px)}
 }
-
-/* محتوى الهدية */
-
-.gift-content {
-  margin-top: 25px;
-  animation: showGift 0.5s ease;
-}
-
-.gift-content-inner {
-  background: #fff8fb;
-  border: 1px solid #f8c8d8;
-  padding: 25px 20px;
-  border-radius: 22px;
-}
-
-.gift-icon {
-  font-size: 55px;
-  margin-bottom: 15px;
-}
-
-.gift-content h2 {
-  margin-bottom: 12px;
-}
-
-.gift-content p {
-  line-height: 1.9;
-  color: #666;
-}
-
-@keyframes showGift {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* الجوال */
-
-@media (max-width: 480px) {
-  .gift-page {
-    padding: 15px 10px;
-  }
-
-  .gift-card {
-    padding: 25px 16px;
-    border-radius: 25px;
-  }
-
-  .gift-header h1 {
-    font-size: 25px;
-  }
-
-  .gift-message p {
-    font-size: 16px;
-  }
-
-  .open-gift-button {
-    font-size: 17px;
-  }
+@keyframes show{
+  from{opacity:0;transform:translateY(15px)}
+  to{opacity:1;transform:none}
 }
