@@ -4,83 +4,61 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>إنشاء هدية جديدة</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
-    }
-    h2 { text-align: center; color: #d81b60; margin-bottom: 20px; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; }
-    input[type="text"], textarea, input[type="file"] {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      box-sizing: border-box;
-      font-size: 14px;
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      background: #d81b60;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
+    body { font-family: system-ui, sans-serif; background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+    .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+    h2 { color: #d81b60; margin-bottom: 20px; font-size: 22px; }
+    .form-group { margin-bottom: 15px; text-align: right; }
+    label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; font-size: 14px; }
+    input[type="text"], textarea, input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
+    button { width: 100%; padding: 14px; background: #d81b60; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     button:disabled { background: #ccc; }
+    .btn-secondary { background: #4a148c; }
+    #resultArea { display: none; margin-top: 10px; }
+    #qrcode { display: flex; justify-content: center; margin: 20px 0; }
+    #qrcode img { border: 8px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 10px; }
+    .link-box { background: #f5f5f5; padding: 10px; border-radius: 8px; word-break: break-all; font-size: 12px; margin-bottom: 15px; color: #333; }
   </style>
 </head>
 <body>
-
 <div class="card">
-  <h2>🎁 إنشاء هدية جديدة</h2>
-  <form id="giftForm">
-    <div class="form-group">
-      <label>اسم المستلم:</label>
-      <input type="text" id="recipientName" required placeholder="مثال: أحمد">
-    </div>
-    <div class="form-group">
-      <label>رسالة الهدية:</label>
-      <textarea id="message" rows="4" required placeholder="اكتب رسالتك هنا..."></textarea>
-    </div>
-    <div class="form-group">
-      <label>اختر صورة من الجوال (اختياري):</label>
-      <input type="file" id="imageFile" accept="image/*">
-    </div>
-    <button type="submit" id="submitBtn">إنشاء الهدية 🚀</button>
-  </form>
+  <div id="formArea">
+    <h2>🎁 إنشاء هدية جديدة</h2>
+    <form id="giftForm">
+      <div class="form-group">
+        <label>اسم المستلم:</label>
+        <input type="text" id="recipientName" required placeholder="مثال: أحمد">
+      </div>
+      <div class="form-group">
+        <label>رسالة الهدية:</label>
+        <textarea id="message" rows="4" required placeholder="اكتب رسالتك هنا..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>اختر صورة من الاستديو (اختياري):</label>
+        <input type="file" id="imageFile" accept="image/*">
+      </div>
+      <button type="submit" id="submitBtn">إنشاء الهدية والبار كود 🚀</button>
+    </form>
+  </div>
+  <div id="resultArea">
+    <h2>🎉 تم إنشاء الهدية بنجاح!</h2>
+    <p style="color: #666; font-size: 14px;">امسح رمز الـ QR أو انسخ الرابط لمشاركته:</p>
+    <div id="qrcode"></div>
+    <div class="link-box" id="giftUrlText"></div>
+    <button onclick="copyGiftUrl()">نسخ رابط الهدية 📋</button>
+    <button class="btn-secondary" onclick="openGift()">معاينة الهدية 👁️</button>
+    <button style="background: #777; margin-top: 15px;" onclick="resetForm()">إنشاء هدية أخرى ➕</button>
+  </div>
 </div>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSy...", // استبدل هذه الإعدادات بإعدادات مشروعك في Firebase
     authDomain: "gift-qr-e2142.firebaseapp.com",
     projectId: "gift-qr-e2142",
-    storageBucket: "gift-qr-e2142.appspot.com",
-    messagingSenderId: "...",
-    appId: "..."
+    storageBucket: "gift-qr-e2142.appspot.com"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -88,6 +66,7 @@
 
   const form = document.getElementById('giftForm');
   const submitBtn = document.getElementById('submitBtn');
+  let currentGiftUrl = "";
 
   function convertBase64(file) {
     return new Promise((resolve, reject) => {
@@ -101,7 +80,7 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     submitBtn.disabled = true;
-    submitBtn.innerText = "جاري إنشاء الهدية... ⏳";
+    submitBtn.innerText = "جاري إنشاء الهدية والبار كود... ⏳";
 
     try {
       const recipientName = document.getElementById('recipientName').value;
@@ -120,14 +99,43 @@
         createdAt: new Date()
       });
 
-      window.location.href = `index.html?id=${docRef.id}`;
+      const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+      currentGiftUrl = `${baseUrl}/index.html?id=${docRef.id}`;
+
+      document.getElementById('qrcode').innerHTML = "";
+      new QRCode(document.getElementById("qrcode"), {
+        text: currentGiftUrl,
+        width: 180,
+        height: 180
+      });
+
+      document.getElementById('giftUrlText').innerText = currentGiftUrl;
+      document.getElementById('formArea').style.display = 'none';
+      document.getElementById('resultArea').style.display = 'block';
+
     } catch (error) {
       alert("حدث خطأ أثناء حفظ الهدية: " + error.message);
       submitBtn.disabled = false;
-      submitBtn.innerText = "إنشاء الهدية 🚀";
+      submitBtn.innerText = "إنشاء الهدية والبار كود 🚀";
     }
   });
-</script>
 
+  window.copyGiftUrl = function() {
+    navigator.clipboard.writeText(currentGiftUrl);
+    alert("تم نسخ رابط الهدية بنجاح! 📋");
+  };
+
+  window.openGift = function() {
+    window.open(currentGiftUrl, '_blank');
+  };
+
+  window.resetForm = function() {
+    form.reset();
+    submitBtn.disabled = false;
+    submitBtn.innerText = "إنشاء الهدية والبار كود 🚀";
+    document.getElementById('formArea').style.display = 'block';
+    document.getElementById('resultArea').style.display = 'none';
+  };
+</script>
 </body>
 </html>
