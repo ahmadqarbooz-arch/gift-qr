@@ -3,105 +3,226 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إنشاء هدية جديدة</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <title>هدية خاصة 🎁</title>
+  
   <style>
-    body { 
-      font-family: system-ui, sans-serif; 
-      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%); 
-      margin: 0; 
-      padding: 20px; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      min-height: 100vh; 
-      box-sizing: border-box; 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    .card { 
-      background: white; 
-      padding: 25px; 
-      border-radius: 20px; 
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-      width: 100%; 
-      max-width: 400px; 
-      text-align: center; 
-    }h2 { color: #d81b60; margin-bottom: 20px; font-size: 22px; }
-    .form-group { margin-bottom: 15px; text-align: right; }
-    label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; font-size: 14px; }
-    input[type="text"], textarea, input[type="file"] { 
-      width: 100%; 
-      padding: 12px; 
-      border: 1px solid #ddd; 
-      border-radius: 10px; 
-      box-sizing: border-box; 
-      font-size: 14px; 
+
+    body {
+      background-color: #fce4ec;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #880e4f;
+      text-align: center;
+      padding: 20px;
     }
-    .optional-tag { font-size: 12px; color: #888; font-weight: normal; }
-    button { 
-      width: 100%; 
-      padding: 14px; 
-      background: #d81b60; 
-      color: white; 
-      border: none; 
-      border-radius: 10px; 
-      font-size: 16px; 
-      font-weight: bold; 
-      cursor: pointer; 
-      margin-top: 10px; 
+
+    .card {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(233, 30, 99, 0.15);
+      max-width: 450px;
+      width: 100%;
+      transition: all 0.4s ease;
     }
-    button:disabled { background: #ccc; }
-    .btn-secondary { background: #4a148c; }
-    #resultArea { display: none; margin-top: 10px; }
-    #qrcode { display: flex; justify-content: center; margin: 20px 0; }
-    #qrcode img<div id="resultArea">
-    <h2>🎉 تم إنشاء الهدية بنجاح!</h2>
-    <p style="color: #666; font-size: 14px;">امسح رمز الـ QR أو انسخ الرابط لمشاركته:</p>
-    <div id="qrcode"></div>
-    <div class="link-box" id="giftUrlText"></div>
-    <button onclick="copyGiftUrl()">نسخ رابط الهدية 📋</button>
-    <button class="btn-secondary" onclick="openGift()">معاينة الهدية 👁️</button>
-    <button style="background: #777; margin-top: 15px;" onclick="resetForm()">إنشاء هدية أخرى ➕</button>
+
+    /* الشاشة الأولى: الغلاف */
+    .gift-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: bounce 2s infinite;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+
+    .btn-open {
+      background: linear-gradient(135deg, #ec407a, #d81b60);
+      color: white;
+      border: none;
+      padding: 15px 35px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(216, 27, 96, 0.3);
+      transition: transform 0.2s, background 0.3s;
+      width: 100%;
+    }
+
+    .btn-open:hover {
+      transform: scale(1.03);
+      background: linear-gradient(135deg, #d81b60, #ad1457);
+    }
+
+    /* الشاشة الثانية: محتوى الهدية */
+    .hidden {
+      display: none !important;
+    }
+
+    .recipient-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #c2185b;
+      margin-bottom: 15px;
+      border-bottom: 2px dashed #f8bbd0;
+      padding-bottom: 10px;
+    }
+
+    .gift-image {
+      width: 100%;
+      max-height: 250px;
+      object-fit: cover;
+      border-radius: 16px;
+      margin-bottom: 15px;
+    }
+
+    .message-text {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #4a4a4a;
+      margin-bottom: 20px;
+      white-space: pre-wrap;
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-15px); }
+      60% { transform: translateY(-7px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="cover-screen" class="card">
+    <div class="gift-icon">🎁</div>
+    <h1 id="welcome-title">جاري تحميل الهدية... 🎁</h1>
+    <button id="open-btn" class="btn-open">افتح الهدية ✨</button>
   </div>
-</div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  <div id="content-screen" class="card hidden">
+    <div id="recipient-name" class="recipient-title">إلى: </div>
+    <img id="gift-media" class="gift-image hidden" src="" alt="صورة الهدية">
+    <p id="gift-message" class="message-text"></p>
+    <audio id="gift-audio" controls class="hidden"></audio>
+  </div>
 
-  const firebaseConfig = {
-    authDomain: "gift-qr-e2142.firebaseapp.com",
-    projectId: "gift-qr-e2142",
-    storageBucket: "gift-qr-e2142.appspot.com"
-  };
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    // إعدادات مشروع Firebase (gift-qr-e2142)
+    const firebaseConfig = {
+      projectId: "gift-qr-e2142"
+    };
 
-  const form = document.getform.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    submitBtn.disabled = true;
-    submitBtn.innerText = "جاري إنشاء الهدية والبار كود... ⏳";
+    // تهيئة تطبيق Firebase و Firestore
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    try {
-      const recipientName = document.getElementById('recipientName').value;
-      const message = document.getElementById('message').value;
-      const audioUrl = document.getElementById('audioUrl').value.trim();
-      const fileInput = document.getElementById('imageFile');
-      let imageUrl = "";
+    let giftData = null;
 
-      if (fileInput.files.length > 0) {
-        imageUrl = await convertBase64(fileInput.files[0]);
+    // دالة فحص وتأكيد اسم المستلم لمعالجة مشكلة undefined
+    function extractRecipientName(data) {
+      if (!data) return "صديقي العزيز";
+      
+      // الفحص بالترتيب حسب حقول الاسم المحتملة
+      const name = data.recipientName || data.name || data.to;
+      
+      // التأكد من أن القيمة ليست فارغة أو undefined
+      if (name && typeof name === 'string' && name.trim() !== '') {
+        return name.trim();
+      }
+      
+      return "صديقي العزيز";
+    }
+
+    // جلب معرف الهدية من الرابط (مثال: index.html?id=DOCUMENT_ID)
+    const urlParams = new URLSearchParams(window.location.search);
+    const giftId = urlParams.get('id');
+
+    // جلب البيانات من Firestore عند تحميل الصفحة
+    async function fetchGift() {
+      if (!giftId) {
+        document.getElementById('welcome-title').innerText = "وصلتك هدية خاصة 🎁!";
+        return;
       }
 
-      const docRef = await addDoc(collection(db, "gifts"), {
-        recipientName: recipientName,
-        message: message,
-        audioUrl: audioUrl || "",
-        imageUrl: imageUrl || "",
-        createdAt: new Date()
-      });
+      try {
+        const docRef = doc(db, "gifts", giftId);
+        const docSnap = await getDoc(docRef);
 
-      const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-      currentGiftUrl = `${baseUrl}/index.html?id=${docRef.id}`;
+        if (docSnap.exists()) {
+          giftData = docSnap.data();
+          const name = extractRecipientName(giftData);
+          document.getElementById('welcome-title').innerText = `وصلتك هدية خاصة يا ${name} 🎁!`;
+        } else {
+          document.getElementById('welcome-title').innerText = "عذراً، لم نتمكن من العثور على هذه الهدية ❌";
+          document.getElementById('open-btn').style.display = 'none';
+        }
+      } catch (error) {
+        console.error("خطأ في جلب الهدية من Firebase:", error);
+        document.getElementById('welcome-title').innerText = "حدث خطأ أثناء تحميل الهدية ⚠️";
+      }
+    }
 
-      document.ge
+    // عند النقر على زر "افتح الهدية ✨"
+    document.getElementById('open-btn').addEventListener('click', () => {
+      // إخفاء شاشة الغلاف وإظهار شاشة محتوى الهدية
+      document.getElementById('cover-screen').classList.add('hidden');
+      document.getElementById('content-screen').classList.remove('hidden');
+
+      if (giftData) {
+        // 1. عرض اسم المستلم
+        const name = extractRecipientName(giftData);
+        document.getElementById('recipient-name').innerText = `إلى: ${name}`;
+
+        // 2. عرض نص الرسالة
+        const message = giftData.message || giftData.text || "";
+        document.getElementById('gift-message').innerText = message;
+
+        // 3. عرض الصورة (إن وجدت)
+        const imageUrl = giftData.imageUrl || giftData.image || giftData.photo;
+        if (imageUrl) {
+          const imgElement = document.getElementById('gift-media');
+          imgElement.src = imageUrl;
+          imgElement.classList.remove('hidden');
+        }
+
+        // 4. ضبط ومشغل الصوت وتدشينه تلقائياً عند النقر
+        const audioUrl = giftData.audioUrl || giftData.audio || giftData.sound;
+        if (audioUrl) {
+          const audioElement = document.getElementById('gift-audio');
+          audioElement.src = audioUrl;
+          audioElement.classList.remove('hidden');
+          
+          // تشغيل الموسيقى تلقائياً فور نُقر الزر لتجاوز قيود المتصفحات
+          audioElement.play().catch(error => {
+            console.log("تعذر التشغيل التلقائي للصوت:", error);
+          });
+        }
+      }
+    });
+
+    // استدعاء دالة الجلب عند فتح الصفحة
+    fetchGift();
+  </script>
+</body>
+</html>
+
