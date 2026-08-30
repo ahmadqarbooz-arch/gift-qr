@@ -3,116 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إنشاء هدية 🎁</title>
+  <title>لوحة التحكم - إنشاء هدية جديدة</title>
   <link rel="stylesheet" href="style.css">
+  <!-- مكتبة QR Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
-
 <body>
-
-  <main class="gift-page">
-    <div class="gift-card">
-
-      <div class="gift-top">
-        <span>✨</span>
-        <span class="heart-small">❤️</span>
-        <span>✨</span>
+  <div class="container admin-container">
+    <h1>🎁 إنشاء هدية جديدة</h1>
+    <form id="giftForm">
+      <div class="form-group">
+        <label for="recipient">اسم المستلم:</label>
+        <input type="text" id="recipient" placeholder="أدخل اسم الشخص" required>
       </div>
 
-      <h1 class="gift-title">إنشاء هدية 🎁</h1>
+      <div class="form-group">
+        <label for="message">الرسالة:</label>
+        <textarea id="message" rows="4" placeholder="اكتب رسالتك الجميلة هنا..." required></textarea>
+      </div>
 
-      <p class="gift-subtitle">
-        أنشئ هدية خاصة وشارك رابطها مع من تحب ❤️
-      </p>
+      <div class="form-group">
+        <label for="imageUrl">رابط الصورة (اختياري):</label>
+        <input type="url" id="imageUrl" placeholder="https://example.com/image.jpg">
+      </div>
 
-      <section class="gift-content">
+      <button type="submit" id="submitBtn">إنشاء الهدية 🚀</button>
+    </form>
 
-        <form id="giftForm">
-
-          <div style="text-align:right;margin-bottom:18px;">
-            <label for="recipient">اسم المستلم</label>
-            <input
-              id="recipient"
-              type="text"
-              placeholder="مثلاً: أحمد"
-              required
-              style="width:100%;padding:14px;margin-top:8px;border:1px solid #f0cbd5;border-radius:12px;font-size:16px;"
-            >
-          </div>
-
-          <div style="text-align:right;margin-bottom:18px;">
-            <label for="message">رسالة الهدية</label>
-            <textarea
-              id="message"
-              placeholder="اكتب رسالتك هنا..."
-              required
-              rows="6"
-              style="width:100%;padding:14px;margin-top:8px;border:1px solid #f0cbd5;border-radius:12px;font-size:16px;resize:vertical;"
-            ></textarea>
-          </div>
-
-          <div style="text-align:right;margin-bottom:20px;">
-            <label for="photo">صورة الهدية (اختياري)</label>
-            <input
-              id="photo"
-              type="file"
-              accept="image/*"
-              style="width:100%;margin-top:10px;"
-            >
-          </div>
-
-          <button
-            id="createGiftButton"
-            type="submit"
-            class="open-gift-button"
-          >
-            إنشاء الهدية 🎁
-          </button>
-
-        </form>
-
-        <div id="result" class="hidden" style="margin-top:25px;">
-
-          <div class="message-box">
-
-            <div class="message-icon">🎉</div>
-
-            <h2>تم إنشاء الهدية!</h2>
-
-            <p
-              id="giftLink"
-              style="margin-top:15px;word-break:break-all;line-height:1.8;"
-            ></p>
-
-            <button
-              id="copyLinkButton"
-              type="button"
-              class="music-button"
-            >
-              📋 نسخ الرابط
-            </button>
-
-            <br><br>
-
-            <a
-              id="openGiftLink"
-              href="#"
-              target="_blank"
-              class="open-gift-button"
-              style="display:inline-flex;text-decoration:none;"
-            >
-              فتح الهدية ❤️
-            </a>
-
-          </div>
-
-        </div>
-
-      </section>
-
+    <div id="result" class="result-box hidden">
+      <h3>تم إنشاء الهدية بنجاح! 🎉</h3>
+      <p>رابط الهدية:</p>
+      <div class="link-box">
+        <input type="text" id="giftUrlInput" readonly>
+        <button id="copyBtn">نسخ الرابط</button>
+      </div>
+      <div id="qrcode" class="qr-container"></div>
     </div>
-  </main>
+  </div>
 
-  <script type="module" src="admin.js"></script>
-
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>
