@@ -2,178 +2,58 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <meta
-    name="description"
-    content="هدية خاصة لك ❤️"
-  >
-
-  <title>هدية لك ❤️</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لديك هدية خاصة! 🎁</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
   <!-- شاشة التحميل -->
-  <div id="loadingScreen" class="screen">
-    <div class="loading-box">
-      <div class="loader-heart">❤️</div>
-      <h2>جاري تجهيز هديتك</h2>
-      <p>لحظات صغيرة...</p>
-      <div class="loading-dots">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
+  <div id="loader" class="screen">
+    <div class="spinner"></div>
+    <h2>جاري تجهيز هديتك... 🎁</h2>
   </div>
-
 
   <!-- شاشة الخطأ -->
   <div id="errorScreen" class="screen hidden">
-    <div class="error-box">
-
-      <div class="error-icon">💔</div>
-
-      <h1>عذراً</h1>
-
-      <p id="errorMessage">
-        لم نتمكن من العثور على هذه الهدية.
-      </p>
-
-      <button
-        type="button"
-        onclick="location.href = location.pathname"
-      >
-        العودة
-      </button>
-
+    <div class="card error-card">
+      <div class="icon">⚠️</div>
+      <h2 id="errorMessage">عذرًا، تعذر العثور على الهدية!</h2>
+      <p>تأكد من صحة الرابط وحاول مرة أخرى.</p>
     </div>
   </div>
 
+  <!-- شاشة الغلاف (قبل الفتح) -->
+  <div id="coverScreen" class="screen hidden">
+    <div class="card cover-card">
+      <div class="gift-box-icon">🎁</div>
+      <h1 id="recipientGreeting">وصلتك هدية خاصة!</h1>
+      <p>اضغط على الزر بالأسفل لرؤية المفاجأة</p>
+      <button id="openBtn" class="primary-btn">افتح الهدية ✨</button>
+    </div>
+  </div>
 
-  <!-- صفحة الهدية -->
-  <main id="giftPage" class="gift-page hidden">
-
-    <div class="gift-card">
-
-      <div class="gift-top">
-        <div class="sparkle">✨</div>
-        <div class="heart-small">❤️</div>
-        <div class="sparkle">✨</div>
+  <!-- شاشة محتوى الهدية (بعد الفتح) -->
+  <div id="giftScreen" class="screen hidden">
+    <div class="card gift-card">
+      <div class="sparkles">✨ 🎉 ✨</div>
+      <h2 class="to-text">إلى: <span id="giftRecipient"></span></h2>
+      
+      <div id="imageContainer" class="image-container hidden">
+        <img id="giftImage" src="" alt="صورة الهدية">
       </div>
 
+      <div class="message-box">
+        <p id="giftMessage"></p>
+      </div>
 
-      <h1 class="gift-title">
-        عندي هدية إلك ❤️
-      </h1>
-
-
-      <p class="gift-subtitle">
-        في شيء صغير حابب أهديك ياه...
-      </p>
-
-
-      <!-- الغلاف -->
-      <section id="cover" class="cover">
-
-        <div class="cover-decoration">🎁</div>
-
-        <h2>
-          هدية خاصة إلك
-        </h2>
-
-        <p>
-          اضغط على الزر لتفتح هديتك
-        </p>
-
-        <button
-          id="openGiftButton"
-          type="button"
-          class="open-gift-button"
-        >
-          <span>افتح الهدية</span>
-          <span>✨</span>
-        </button>
-
-      </section>
-
-
-      <!-- محتوى الهدية -->
-      <section id="gift" class="gift-content hidden">
-
-        <div class="gift-header">
-          <span>💌</span>
-          <h2>إلك أنت</h2>
-          <span>❤️</span>
-        </div>
-
-
-        <!-- اسم المستلم -->
-        <div
-          id="recipient"
-          class="recipient"
-        ></div>
-
-
-        <!-- الصورة -->
-        <div
-          class="photo-container"
-          id="photoContainer"
-        >
-          <div
-            class="photo-placeholder"
-            aria-label="صورة الهدية"
-          >
-            🎁
-          </div>
-        </div>
-
-
-        <!-- الرسالة -->
-        <div class="message-box">
-
-          <div class="message-icon">
-            💖
-          </div>
-
-          <p
-            id="messageText"
-            class="message-text"
-          ></p>
-
-        </div>
-
-
-        <!-- الموسيقى -->
-        <button
-          id="musicBtn"
-          type="button"
-          class="music-button"
-        >
-          🎵 تشغيل الموسيقى
-        </button>
-
-
-        <div class="bottom-hearts">
-          ❤️ ✨ ❤️ ✨ ❤️
-        </div>
-
-      </section>
-
+      <div class="footer-text">صنعت لك بكل حب ❤️</div>
     </div>
+  </div>
 
-  </main>
-
-
-  <!-- JavaScript -->
-  <script type="module" src="script.js"></script>
-
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
