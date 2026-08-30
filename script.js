@@ -1,85 +1,91 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-import {
-  getFirestore,
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-
+// إعدادات Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyCLdoOE3Acurp2JSUrnEJuba-ZQL953sbs",
-  authDomain: "gift-qr-e2142.firebaseapp.com",
-  projectId: "gift-qr-e2142",
-  storageBucket: "gift-qr-e2142.firebasestorage.app",
-  messagingSenderId: "679349583021",
-  appId: "1:679349583021:web:fbfb21b5be3f62f12fda24"
+  projectId: "gift-qr-e2142"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// تهيئة Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
 
-const loadingScreen = document.getElementById("loadingScreen");
-const errorScreen = document.getElementById("errorScreen");
-const errorMessage = document.getElementById("errorMessage");
-const giftPage = document.getElementById("giftPage");
-const cover = document.getElementById("cover");
-const gift = document.getElementById("gift");
-const openButton = document.getElementById("openGiftButton");
-const recipient = document.getElementById("recipient");
-const messageText = document.getElementById("messageText");
-const photoContainer = document.getElementById("photoContainer");
+// عناصر الصفحة
+const loader = document.getElementById('loader');
+const errorScreen = document.getElementById('errorScreen');
+const errorMessage = document.getElementById('errorMessage');
+const coverScreen = document.getElementById('coverScreen');
+const giftScreen = document.getElementById('giftScreen');
 
-function showError(message) {
-  loadingScreen.classList.add("hidden");
-  giftPage.classList.add("hidden");
-  errorMessage.textContent = message;
-  errorScreen.classList.remove("hidden");
+const recipientGreeting = document.getElementById('recipientGreeting');
+const giftRecipient = document.getElementById('giftRecipient');
+const giftMessage = document.getElementById('giftMessage');
+const imageContainer = document.getElementById('imageContainer');
+const giftImage = document.getElementById('giftImage');
+const openBtn = document.getElementById('openBtn');
+
+// وظيفة المساعدة لإخفاء كل الشاشات
+function hideAllScreens() {
+  loader.classList.add('hidden');
+  errorScreen.classList.add('hidden');
+  coverScreen.classList.add('hidden');
+  giftScreen.classList.add('hidden');
 }
 
-async function loadGift() {
+// إظهار الخطأ
+function showError(msg) {
+  hideAllScreens();
+  if (msg) errorMessage.textContent = msg;
+  errorScreen.classList.remove('hidden');
+}
+
+// بدء التشغيل عند تحميل الصفحة
+window.addEventListener('DOMContentLoaded', async () => {
+  // قراءة الـ ID من معامِلات الرابط (URL Query Parameters)
+  const urlParams = new URLSearchParams(window.location.search);
+  const giftId = urlParams.get('id');
+
+  // التأكد من وجود ID في الرابط
+  if (!giftId) {
+    showError('عذرًا، رابط الهدية غير مكتمل.');
+    return;
+  }
+
   try {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+    // جلب الهدية من Firestore باستخدام الـ ID
+    const docRef = db.collection('gifts').doc(giftId);
+    const doc = await docRef.get();
 
-    if (!id) {
-      showError("رابط الهدية غير مكتمل.");
+    if (!doc.exists) {
+      showError('عذرًا، لم يتم العثور على هذه الهدية أو ربما تم حذفها.');
       return;
     }
 
-    const giftRef = doc(db, "gifts", id);
-    const giftSnap = await getDoc(giftRef);
+    const data = doc.data();
 
-    if (!giftSnap.exists()) {
-      showError("لم نتمكن من العثور على هذه الهدية.");
-      return;
+    // تعبئة البيانات في الشاشات
+    recipientGreeting.textContent = `وصلتك هدية خاصة يا ${data.recipient}! 🎁`;
+    giftRecipient.textContent = data.recipient;
+    giftMessage.textContent = data.message;
+
+    if (data.imageUrl) {
+      giftImage.src = data.imageUrl;
+      imageContainer.classList.remove('hidden');
+    } else {
+      imageContainer.classList.add('hidden');
     }
 
-    const data = giftSnap.data();
-
-    recipient.textContent = data.recipient || "إلك ❤️";
-    messageText.textContent = data.message || "";
-
-    if (data.photo) {
-      photoContainer.innerHTML = "";
-      const img = document.createElement("img");
-      img.src = data.photo;
-      img.alt = "صورة الهدية";
-      photoContainer.appendChild(img);
-    }
-
-    loadingScreen.classList.add("hidden");
-    giftPage.classList.remove("hidden");
+    // إخفاء شاشة التحميل وإظهار شاشة الغلاف المغلق
+    hideAllScreens();
+    coverScreen.classList.remove('hidden');
 
   } catch (error) {
-    console.error("Gift loading error:", error);
-    showError("حدث خطأ أثناء تحميل الهدية.");
+    console.error("خطأ أثناء جلب الهدية:", error);
+    showError('حدث خطأ أثناء تحميل الهدية. يرجى التحقق من الاتصال بالإنترنت.');
   }
-}
+});
 
-function openGift() {
-  cover.classList.add("hidden");
-  gift.classList.remove("hidden");
-}
-
-openButton.addEventListener("click", openGift);
-
-loadGift();
+// عند الضغط على زر "افتح الهدية ✨"
+openBtn.addEventListener('click', () => {
+  coverScreen.classList.add('hidden');
+  giftScreen.classList.remove('hidden');
+});
