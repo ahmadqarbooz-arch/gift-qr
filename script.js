@@ -33,7 +33,8 @@ async function loadGift() {
     }
 
     const data = giftDoc.data();
-
+document.getElementById("loadingScreen")?.classList.add("hidden");
+document.getElementById("giftPage")?.classList.remove("hidden");
     const recipient = document.getElementById("recipient");
     const message = document.getElementById("messageText");
     const photo = document.querySelector(".photo-placeholder");
