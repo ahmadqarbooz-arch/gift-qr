@@ -107,3 +107,10 @@ if (musicBtn) {
     } else {
       audio.pause();
       musicBtn.textContent = "🎵 تشغيل الموسيقى";
+}
+});
+}
+
+document.getElementById("openGiftButton")?.addEventListener("click", openGift);
+
+loadGift();
