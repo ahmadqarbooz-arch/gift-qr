@@ -1,59 +1,88 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لديك هدية خاصة! 🎁</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  <!-- شاشة التحميل -->
-  <div id="loader" class="screen">
-    <div class="spinner"></div>
-    <h2>جاري تجهيز هديتك... 🎁</h2>
-  </div>
+  const firebaseConfig = {
+    authDomain: "gift-qr-e2142.firebaseapp.com",
+    projectId: "gift-qr-e2142",
+    storageBucket: "gift-qr-e2142.appspot.com"
+  };
 
-  <!-- شاشة الخطأ -->
-  <div id="errorScreen" class="screen hidden">
-    <div class="card error-card">
-      <div class="icon">⚠️</div>
-      <h2 id="errorMessage">عذرًا، تعذر العثور على الهدية!</h2>
-      <p>تأكد من صحة الرابط وحاول مرة أخرى.</p>
-    </div>
-  </div>
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-  <!-- شاشة الغلاف (قبل الفتح) -->
-  <div id="coverScreen" class="screen hidden">
-    <div class="card cover-card">
-      <div class="gift-box-icon">🎁</div>
-      <h1 id="recipientGreeting">وصلتك هدية خاصة!</h1>
-      <p>اضغط على الزر بالأسفل لرؤية المفاجأة</p>
-      <button id="openBtn" class="primary-btn">افتح الهدية ✨</button>
-    </div>
-  </div>
+  const form = document.getElementById('giftForm');
+  const submitBtn = document.getElementById('submitBtn');
+  let currentGiftUrl = "";
 
-  <!-- شاشة محتوى الهدية (بعد الفتح) -->
-  <div id="giftScreen" class="screen hidden">
-    <div class="card gift-card">
-      <div class="sparkles">✨ 🎉 ✨</div>
-      <h2 class="to-text">إلى: <span id="giftRecipient"></span></h2>
-      
-      <div id="imageContainer" class="image-container hidden">
-        <img id="giftImage" src="" alt="صورة الهدية">
-      </div>
+  function convertBase64(file) {
+    return new Promise((resolve, reject) => {
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(file);
+      fileReader.onload = () => resolve(fileReader.result);
+      fileReader.onerror = (error) => reject(error);
+    });
+  }
 
-      <div class="message-box">
-        <p id="giftMessage"></p>
-      </div>
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.innerText = "جاري إنشاء الهدية والبار كود... ⏳";
 
-      <div class="footer-text">صنعت لك بكل حب ❤️</div>
-    </div>
-  </div>
+    try {
+      const recipientName = document.getElementById('recipientName').value;
+      const message = document.getElementById('message').value;
+      const fileInput = document.getElementById('imageFile');
+      let imageUrl = "";
 
-  <!-- Firebase Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="script.js"></script>
+      if (fileInput.files.length > 0) {
+        imageUrl = await convertBase64(fileInput.files[0]);
+      }
+
+      const docRef = await addDoc(collection(db, "gifts"), {
+        recipientName: recipientName,
+        message: message,
+        imageUrl: imageUrl,
+        createdAt: new Date()
+      });
+
+      const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+      currentGiftUrl = `${baseUrl}/index.html?id=${docRef.id}`;
+
+      document.getElementById('qrcode').innerHTML = "";
+      new QRCode(document.getElementById("qrcode"), {
+        text: currentGiftUrl,
+        width: 180,
+        height: 180
+      });
+
+      document.getElementById('giftUrlText').innerText = currentGiftUrl;
+      document.getElementById('formArea').style.display = 'none';
+      document.getElementById('resultArea').style.display = 'block';
+
+    } catch (error) {
+      alert("حدث خطأ أثناء حفظ الهدية: " + error.message);
+      submitBtn.disabled = false;
+      submitBtn.innerText = "إنشاء الهدية والبار كود 🚀";
+    }
+  });
+
+  window.copyGiftUrl = function() {
+    navigator.clipboard.writeText(currentGiftUrl);
+    alert("تم نسخ رابط الهدية بنجاح! 📋");
+  };
+
+  window.openGift = function() {
+    window.open(currentGiftUrl, '_blank');
+  };
+
+  window.resetForm = function() {
+    form.reset();
+    submitBtn.disabled = false;
+    submitBtn.innerText = "إنشاء الهدية والبار كود 🚀";
+    document.getElementById('formArea').style.display = 'block';
+    document.getElementById('resultArea').style.display = 'none';
+  };
+</script>
 </body>
 </html>
