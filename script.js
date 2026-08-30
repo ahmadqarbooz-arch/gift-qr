@@ -1,3 +1,10 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyCLdoOE3Acurp2JSUrnEJuba-ZQL953sbs",
   authDomain: "gift-qr-e2142.firebaseapp.com",
@@ -7,111 +14,72 @@ const firebaseConfig = {
   appId: "1:679349583021:web:fbfb21b5be3f62f12fda24"
 };
 
-let audio = null;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const loadingScreen = document.getElementById("loadingScreen");
+const errorScreen = document.getElementById("errorScreen");
+const errorMessage = document.getElementById("errorMessage");
+const giftPage = document.getElementById("giftPage");
+const cover = document.getElementById("cover");
+const gift = document.getElementById("gift");
+const openButton = document.getElementById("openGiftButton");
+const recipient = document.getElementById("recipient");
+const messageText = document.getElementById("messageText");
+const photoContainer = document.getElementById("photoContainer");
+
+function showError(message) {
+  loadingScreen.classList.add("hidden");
+  giftPage.classList.add("hidden");
+  errorMessage.textContent = message;
+  errorScreen.classList.remove("hidden");
+}
 
 async function loadGift() {
-  const params = new URLSearchParams(location.search);
-  const id = params.get("id");
-
-  if (!id) return;
-
   try {
-    const { initializeApp } =
-      await import("https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js");
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
 
-    const { getFirestore, doc, getDoc } =
-      await import("https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js");
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const giftDoc = await getDoc(doc(db, "gifts", id));
-
-    if (!giftDoc.exists()) {
-      console.error("Gift not found");
+    if (!id) {
+      showError("رابط الهدية غير مكتمل.");
       return;
     }
 
-    const data = giftDoc.data();
-document.getElementById("loadingScreen")?.classList.add("hidden");
-document.getElementById("giftPage")?.classList.remove("hidden");
-    const recipient = document.getElementById("recipient");
-    const message = document.getElementById("messageText");
-    const photo = document.querySelector(".photo-placeholder");
+    const giftRef = doc(db, "gifts", id);
+    const giftSnap = await getDoc(giftRef);
 
-    if (recipient && data.recipient) {
-      recipient.textContent = `إلى ${data.recipient} ❤️`;
+    if (!giftSnap.exists()) {
+      showError("لم نتمكن من العثور على هذه الهدية.");
+      return;
     }
 
-    if (message && data.message) {
-      message.textContent = data.message;
+    const data = giftSnap.data();
+
+    recipient.textContent = data.recipient || "إلك ❤️";
+    messageText.textContent = data.message || "";
+
+    if (data.photo) {
+      photoContainer.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = data.photo;
+      img.alt = "صورة الهدية";
+      photoContainer.appendChild(img);
     }
 
-    if (photo && data.photo) {
-      photo.innerHTML = `
-        <img
-          src="${data.photo}"
-          alt="صورة الهدية"
-          style="width:100%;height:100%;object-fit:cover;border-radius:20px"
-        >
-      `;
-    }
+    loadingScreen.classList.add("hidden");
+    giftPage.classList.remove("hidden");
 
   } catch (error) {
     console.error("Gift loading error:", error);
+    showError("حدث خطأ أثناء تحميل الهدية.");
   }
 }
 
 function openGift() {
-  const cover = document.getElementById("cover");
-  const gift = document.getElementById("gift");
-
-  if (cover) {
-    cover.classList.add("hidden");
-  }
-
-  if (gift) {
-    gift.classList.remove("hidden");
-  }
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
+  cover.classList.add("hidden");
+  gift.classList.remove("hidden");
 }
 
-const openBtn = document.getElementById("openGiftButton");
-
-if (openBtn) {
-  openBtn.addEventListener("click", openGift);
-}
-
-const musicBtn = document.getElementById("musicBtn");
-
-if (musicBtn) {
-  musicBtn.addEventListener("click", () => {
-
-    if (!audio) {
-      audio = new Audio(
-        "https://cdn.pixabay.com/audio/2022/10/25/audio_946b7a0d2d.mp3"
-      );
-
-      audio.loop = true;
-    }
-
-    if (audio.paused) {
-      audio.play().then(() => {
-        musicBtn.textContent = "⏸️ إيقاف الموسيقى";
-      }).catch(() => {
-        alert("🎵 اضغط مرة ثانية للسماح بتشغيل الموسيقى");
-      });
-    } else {
-      audio.pause();
-      musicBtn.textContent = "🎵 تشغيل الموسيقى";
-}
-});
-}
-
-document.getElementById("openGiftButton")?.addEventListener("click", openGift);
+openButton.addEventListener("click", openGift);
 
 loadGift();
