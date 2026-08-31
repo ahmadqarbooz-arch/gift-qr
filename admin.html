@@ -5,9 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة التحكم - QR Gift</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- مكتبة QRCode.js لتوليد الـ QR Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <style>
     :root {
       --primary-color: #d4af37;
+      --primary-hover: #b8962d;
       --bg-color: #f4f6f9;
       --card-bg: #ffffff;
       --text-color: #333333;
@@ -55,7 +60,10 @@
       font-weight: 600;
     }
 
-    input, textarea {
+    input[type="text"],
+    input[type="url"],
+    input[type="file"],
+    textarea {
       width: 100%;
       padding: 12px;
       border: 1px solid #cccccc;
@@ -63,6 +71,7 @@
       font-size: 14px;
       outline: none;
       transition: border-color 0.3s;
+      background-color: #fff;
     }
 
     input:focus, textarea:focus {
@@ -83,7 +92,25 @@
     }
 
     button:hover {
-      background-color: #b8962d;
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: #2c3e50;
+      margin-top: 10px;
+    }
+
+    .btn-secondary:hover {
+      background-color: #1a252f;
+    }
+
+    .btn-success {
+      background-color: #27ae60;
+      margin-top: 10px;
+    }
+
+    .btn-success:hover {
+      background-color: #219150;
     }
 
     .status-message {
@@ -94,6 +121,37 @@
 
     .status-success { color: #27ae60; }
     .status-error { color: #e74c3c; }
+
+    /* منطقة الـ QR Code وزر المعاينة */
+    #qrContainer {
+      display: none;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 2px dashed #eeeeee;
+      text-align: center;
+    }
+
+    #qrcode {
+      display: flex;
+      justify-content: center;
+      margin: 15px 0;
+    }
+
+    #qrcode img {
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .image-preview {
+      max-width: 100%;
+      max-height: 150px;
+      margin-top: 10px;
+      border-radius: 8px;
+      display: none;
+      object-fit: cover;
+    }
   </style>
 </head>
 <body>
@@ -122,13 +180,26 @@
       </div>
 
       <div class="form-group">
-        <label for="imageUrl">رابط الصورة</label>
-        <input type="url" id="imageUrl" placeholder="https://example.com/image.jpg">
+        <label for="imageFile">اختيار صورة الهدية (من الجهاز/الجوال)</label>
+        <input type="file" id="imageFile" accept="image/*">
+        <img id="imagePreview" class="image-preview" alt="معاينة الصورة">
       </div>
 
       <button type="submit" id="submitBtn">حفظ الهدية</button>
     </form>
+
     <div id="status" class="status-message"></div>
+
+    <!-- قسم الـ QR Code والإجراءات بعد الحفظ -->
+    <div id="qrContainer">
+      <h3 style="color: #2c3e50; margin-bottom: 10px;">رمز QR للهدية</h3>
+      <div id="qrcode"></div>
+      
+      <button id="copyBtn" class="btn-success">نسخ رابط الهدية 📋</button>
+      <a id="previewLink" href="#" target="_blank" style="text-decoration: none;">
+        <button class="btn-secondary">معاينة الهدية 👁️</button>
+      </a>
+    </div>
   </div>
 
   <!-- Firebase SDKs -->
@@ -145,17 +216,54 @@
 
     const giftForm = document.getElementById('giftForm');
     const statusDiv = document.getElementById('status');
+    const imageFileInput = document.getElementById('imageFile');
+    const imagePreview = document.getElementById('imagePreview');
+    const qrContainer = document.getElementById('qrContainer');
+    const qrcodeDiv = document.getElementById('qrcode');
+    const copyBtn = document.getElementById('copyBtn');
+    const previewLink = document.getElementById('previewLink');
 
+    let imageBase64 = "";
+    let currentGiftUrl = "";
+
+    // معاينة الصورة المختارة وتحويلها لـ Base64
+    imageFileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        // التأكد من حجم الصورة حتى لا تتجاوز حدود Firestore (1MB)
+        if (file.size > 900 * 1024) {
+          alert("حجم الصورة كبير جداً، يرجى اختيار صورة حجمها أقل من 1 ميجابايت.");
+          imageFileInput.value = "";
+          imagePreview.style.display = 'none';
+          imageBase64 = "";
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          imageBase64 = event.target.result;
+          imagePreview.src = imageBase64;
+          imagePreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        imageBase64 = "";
+        imagePreview.style.display = 'none';
+      }
+    });
+
+    // حفظ الهدية وتوليد الـ QR Code
     giftForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       statusDiv.textContent = 'جاري الحفظ...';
       statusDiv.className = 'status-message';
+      qrContainer.style.display = 'none';
+      qrcodeDiv.innerHTML = '';
 
       const recipientName = document.getElementById('recipientName').value.trim();
       const occasion = document.getElementById('occasion').value.trim();
       const message = document.getElementById('message').value.trim();
       const audioUrl = document.getElementById('audioUrl').value.trim();
-      const imageUrl = document.getElementById('imageUrl').value.trim();
 
       try {
         const docRef = await db.collection('gifts').add({
@@ -163,21 +271,58 @@
           occasion: occasion || "",
           message: message,
           audioUrl: audioUrl || "",
-          imageUrl: imageUrl || "",
+          imageUrl: imageBase64 || "",
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        statusDiv.textContent = `تم حفظ الهدية بنجاح! المعرف: ${docRef.id}`;
+        statusDiv.textContent = 'تم حفظ الهدية بنجاح!';
         statusDiv.className = 'status-message status-success';
+
+        // حساب رابط الهدية الكامل
+        const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+        currentGiftUrl = `${baseUrl}index.html?id=${docRef.id}`;
+
+        // توليد الـ QR Code
+        new QRCode(qrcodeDiv, {
+          text: currentGiftUrl,
+          width: 180,
+          height: 180,
+          colorDark: "#2c3e50",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // تحديث أزرار النسخ والمعاينة
+        previewLink.href = currentGiftUrl;
+        qrContainer.style.display = 'block';
+
+        // إعادة ضبط النموذج
         giftForm.reset();
+        imagePreview.style.display = 'none';
+        imageBase64 = "";
+
       } catch (error) {
         console.error("Error adding document: ", error);
-        statusDiv.textContent = 'حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.';
+        statusDiv.textContent = 'حدث خطأ أثناء الحفظ: ' + error.message;
         statusDiv.className = 'status-message status-error';
+      }
+    });
+
+    // نسخ الرابط
+    copyBtn.addEventListener('click', () => {
+      if (currentGiftUrl) {
+        navigator.clipboard.writeText(currentGiftUrl).then(() => {
+          const originalText = copyBtn.textContent;
+          copyBtn.textContent = 'تم النسخ! ✓';
+          setTimeout(() => {
+            copyBtn.textContent = originalText;
+          }, 2000);
+        }).catch(err => {
+          alert("فشل نسخ الرابط، يمكنك نسخه يدوياً: " + currentGiftUrl);
+        });
       }
     });
   </script>
 
 </body>
 </html>
-
