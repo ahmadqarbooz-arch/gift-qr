@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة الطلبات - QR Gift</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #d4af37;
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-color: #2c3e50;
+    }
+
+    * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+    body { background-color: var(--bg-color); color: var(--text-color); padding: 15px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    h2 { text-align: center; margin-bottom: 20px; }
+
+    /* كروت الإحصائيات */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .stat-card h4 { font-size: 13px; color: #7f8c8d; }
+    .stat-card p { font-size: 22px; font-weight: 700; color: var(--primary-color); }
+
+    /* نموذج إضافة طلب جديد */
+    .form-card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      margin-bottom: 25px;
+      border: 1px dashed var(--primary-color);
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      font-size: 14px;
+    }
+    button {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: 0.3s;
+    }
+    button:hover { background: #b8962d; }
+
+    /* جدول وقائمة الطلبات */
+    .orders-list { display: flex; flex-direction: column; gap: 12px; }
+    .order-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-right: 5px solid var(--primary-color);
+    }
+    .order-header { display: flex; justify-content: space-between; align-items: center; }
+    .order-header h3 { font-size: 18px; }
+    .order-details { font-size: 14px; color: #555; display: flex; flex-direction: column; gap: 4px; }
+    .order-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 5px; }
+
+    /* حالات الطلب */
+    .status-select { width: auto; font-weight: 600; padding: 6px 10px; }
+    .status-pending { background-color: #fff3cd; color: #856404; }
+    .status-delivered { background-color: #d4edda; color: #155724; }
+    .status-cancelled { background-color: #f8d7da; color: #721c24; }
+
+    .btn-sm {
+      width: auto;
+      padding: 6px 12px;
+      font-size: 13px;
+      background: #2c3e50;
+    }
+    .btn-danger { background: #e74c3c; }
+    .btn-danger:hover { background: #c0392b; }
+
+    @media (min-width: 600px) {
+      .order-card { flex-direction: row; justify-content: space-between; align-items: center; }
+      .order-actions { justify-content: flex-end; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>لوحة إدارة الطلبات والمزامنة</h2>
+
+    <!-- شريط الإحصائيات -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h4>إجمالي الطلبات</h4>
+        <p id="totalCount">0</p>
+      </div>
+      <div class="stat-card">
+        <h4>قيد الانتظار ⏳</h4>
+        <p id="pendingCount">0</p>
+      </div>
+      <div class="stat-card">
+        <h4>تم التسليم ✅</h4>
+        <p id="deliveredCount">0</p>
+      </div>
+    </div>
+
+    <!-- نموذج تسجيل طلب جديد -->
+    <div class="form-card">
+      <h3 style="margin-bottom: 12px; font-size: 16px;">تسجيل طلب جديد</h3>
+      <form id="orderForm">
+        <div class="form-grid">
+          <input type="text" id="clientName" placeholder="اسم الزبون *" required>
+          <input type="text" id="clientPhone" placeholder="رقم الهاتف *" required>
+          <input type="text" id="clientAddress" placeholder="عنوان التوصيل *" required>
+          <input type="text" id="giftUrl" placeholder="رابط الهدية / ID الهدية">
+        </div>
+        <button type="submit">إضافة الطلب للنظام 🚀</button>
+      </form>
+    </div>
+
+    <!-- قائمة الطلبات الحية -->
+    <h3 style="margin-bottom: 15px;">قائمة الطلبات (تحديث مباشر ⚡)</h3>
+    <div id="ordersContainer" class="orders-list">
+      <p style="text-align: center; color: #7f8c8d;">جاري تحميل الطلبات...</p>
+    </div>
+  </div>
+
+  <!-- SDKs الخاصة بـ Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script>
+    const firebaseConfig = { projectId: "gift-qr-e2142" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const orderForm = document.getElementById('orderForm');
+    const ordersContainer = document.getElementById('ordersContainer');
+
+    // إضافة طلب جديد
+    orderForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('clientName').value.trim();
+      const phone = document.getElementById('clientPhone').value.trim();
+      const address = document.getElementById('clientAddress').value.trim();
+      let gift = document.getElementById('giftUrl').value.trim();
+
+      try {
+        await db.collection('orders').add({
+          clientName: name,
+          clientPhone: phone,
+          clientAddress: address,
+          giftUrl: gift || "",
+          status: "pending",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        orderForm.reset();
+      } catch (err) {
+        alert("حدث خطأ أثناء إضافة الطلب: " + err.message);
+      }
+    });
+
+    // الاستماع الفوري للتغيرات في قاعدة البيانات (Real-time Listener)
+    db.collection('orders').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+      ordersContainer.innerHTML = '';
+      
+      let total = 0;
+      let pending = 0;
+      let delivered = 0;
+
+      if (snapshot.empty) {
+        ordersContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d;">لا يوجد طلبات مسجلة حتى الآن.</p>';
+      }
+
+      snapshot.forEach((doc) => {
+        total++;
+        const data = doc.data();
+        const id = doc.id;
+
+        if (data.status === 'pending') pending++;
+        if (data.status === 'delivered') delivered++;
+
+        const orderEl = document.createElement('div');
+        orderEl.className = 'order-card';
+
+        let statusClass = 'status-pending';
+        if (data.status === 'delivered') statusClass = 'status-delivered';
+        if (data.status === 'cancelled') statusClass = 'status-cancelled';
+
+        orderEl.innerHTML = `
+          <div>
+            <div class="order-header">
+              <h3>${data.clientName}</h3>
+            </div>
+            <div class="order-details">
+              <span>📞 الهاتف: <a href="tel:${data.clientPhone}">${data.clientPhone}</a></span>
+              <span>📍 العنوان: ${data.clientAddress}</span>
+              ${data.giftUrl ? `<span>🎁 الهدية: <a href="${data.giftUrl}" target="_blank">فتح رابط الهدية</a></span>` : ''}
+            </div>
+          </div>
+          <div class="order-actions">
+            <select class="status-select ${statusClass}" onchange="updateStatus('${id}', this.value)">
+              <option value="pending" ${data.status === 'pending' ? 'selected' : ''}>⏳ قيد الانتظار</option>
+              <option value="delivered" ${data.status === 'delivered' ? 'selected' : ''}>✅ تم التسليم</option>
+              <option value="cancelled" ${data.status === 'cancelled' ? 'selected' : ''}>❌ ملغي / لم يستلم</option>
+            </select>
+            <button class="btn-sm btn-danger" onclick="deleteOrder('${id}')">حذف</button>
+          </div>
+        `;
+        ordersContainer.appendChild(orderEl);
+      });
+
+      // تحديث شريط الإحصائيات
+      document.getElementById('totalCount').textContent = total;
+      document.getElementById('pendingCount').textContent = pending;
+      document.getElementById('deliveredCount').textContent = delivered;
+    });
+
+    // تحديث حالة الطلب
+    async function updateStatus(id, newStatus) {
+      try {
+        await db.collection('orders').doc(id).update({ status: newStatus });
+      } catch (err) {
+        alert("فشل تحديث الحالة: " + err.message);
+      }
+    }
+
+    // حذف الطلب
+    async function deleteOrder(id) {
+      if (confirm("هل أنت تأكد من حذف هذا الطلب؟")) {
+        try {
+          await db.collection('orders').doc(id).delete();
+        } catch (err) {
+          alert("فشل الحذف: " + err.message);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
