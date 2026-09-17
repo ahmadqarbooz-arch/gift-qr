@@ -216,9 +216,12 @@
     <!-- قسم الـ QR Code والإجراءات بعد الحفظ -->
     <div id="qrContainer">
       <h3 style="color: #2c3e50; margin-bottom: 10px;">رمز QR للهدية</h3>
-      <div id="qrcode"></div>
-      
+      <div id="qrcode"></div>  
       <button id="copyBtn" class="btn-success">نسخ رابط الهدية 📋</button>
+    <button id="downloadQrBtn" style="background-color: #27ae60; color: white; padding: 12px; border: none; border-radius: 8px; width: 100%; margin-top: 10px; cursor: pointer; font-weight: bold;">
+  ⬇️ تحميل صورة الـ QR
+    </button>
+      
       <a id="previewLink" href="#" target="_blank" style="text-decoration: none;">
         <button class="btn-secondary">معاينة الهدية 👁️</button>
       </a>
@@ -445,6 +448,34 @@
           setTimeout(() => {
             copyBtn.textContent = originalText;
           }, 2000);
+              // تحميل صورة الـ QR
+    const downloadQrBtn = document.getElementById('downloadQrBtn');
+    if (downloadQrBtn) {
+      downloadQrBtn.addEventListener('click', () => {
+        const qrCanvas = qrcodeDiv.querySelector('canvas');
+        const qrImg = qrcodeDiv.querySelector('img');
+
+        if (qrCanvas) {
+          const imageURI = qrCanvas.toDataURL("image/png");
+          const link = document.createElement('a');
+          link.href = imageURI;
+          link.download = 'gift-qr.png';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else if (qrImg && qrImg.src) {
+          const link = document.createElement('a');
+          link.href = qrImg.src;
+          link.download = 'gift-qr.png';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          alert("الرجاء إنشاء رمز الـ QR أولاً!");
+        }
+      });
+    }
+          
         }).catch(err => {
           alert("فشل نسخ الرابط، يمكنك نسخه يدوياً: " + currentGiftUrl);
         });
