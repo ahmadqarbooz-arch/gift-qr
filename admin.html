@@ -448,7 +448,7 @@
           setTimeout(() => {
             copyBtn.textContent = originalText;
           }, 2000);
-              // تحميل صورة الـ QR
+            
     const downloadQrBtn = document.getElementById('downloadQrBtn');
     if (downloadQrBtn) {
       downloadQrBtn.addEventListener('click', () => {
@@ -471,10 +471,8 @@
           link.click();
           document.body.removeChild(link);
         } else {
-          alert("الرجاء إنشاء رمز الـ QR أولاً!");
-        }
-      });
-    }
+          alert("الرجاء إنشاء رمز الـ QR أولاً   
+    
           
         }).catch(err => {
           alert("فشل نسخ الرابط، يمكنك نسخه يدوياً: " + currentGiftUrl);
