@@ -113,6 +113,15 @@
       background-color: #219150;
     }
 
+    .btn-download {
+      background-color: #2980b9;
+      margin-top: 10px;
+    }
+
+    .btn-download:hover {
+      background-color: #1f618d;
+    }
+
     .status-message {
       margin-top: 15px;
       text-align: center;
@@ -137,7 +146,7 @@
       margin: 15px 0;
     }
 
-    #qrcode img {
+    #qrcode img, #qrcode canvas {
       padding: 10px;
       background: #fff;
       border: 1px solid #ddd;
@@ -216,14 +225,12 @@
     <!-- قسم الـ QR Code والإجراءات بعد الحفظ -->
     <div id="qrContainer">
       <h3 style="color: #2c3e50; margin-bottom: 10px;">رمز QR للهدية</h3>
-      <div id="qrcode"></div>  
-      <button id="copyBtn" class="btn-success">نسخ رابط الهدية 📋</button>
-    <button id="downloadQrBtn" style="background-color: #27ae60; color: white; padding: 12px; border: none; border-radius: 8px; width: 100%; margin-top: 10px; cursor: pointer; font-weight: bold;">
-  ⬇️ تحميل صورة الـ QR
-    </button>
+      <div id="qrcode"></div>
       
+      <button id="downloadQrBtn" type="button" class="btn-download">تنزيل / حفظ صورة الـ QR 📲</button>
+      <button id="copyBtn" type="button" class="btn-success">نسخ رابط الهدية 📋</button>
       <a id="previewLink" href="#" target="_blank" style="text-decoration: none;">
-        <button class="btn-secondary">معاينة الهدية 👁️</button>
+        <button type="button" class="btn-secondary">معاينة الهدية 👁️</button>
       </a>
     </div>
   </div>
@@ -247,6 +254,7 @@
     const qrContainer = document.getElementById('qrContainer');
     const qrcodeDiv = document.getElementById('qrcode');
     const copyBtn = document.getElementById('copyBtn');
+    const downloadQrBtn = document.getElementById('downloadQrBtn');
     const previewLink = document.getElementById('previewLink');
     const editingDocIdInput = document.getElementById('editingDocId');
     const formTitle = document.getElementById('formTitle');
@@ -256,7 +264,7 @@
     let imageBase64 = "";
     let currentGiftUrl = "";
 
-    // دالة لتقليل حجم الصورة تلقائياً لتتجاوز حدود Firestore بدون التأثير على المظهر
+    // دالة لتقليل حجم الصورة تلقائياً
     function compressImage(file, maxWidth, quality, callback) {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -285,7 +293,7 @@
       };
     }
 
-    // معاينة الصورة المختارة وضغطها تلقائياً
+    // معاينة الصورة المختارة وضغطها
     imageFileInput.addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
@@ -354,7 +362,7 @@
       }
     });
 
-    // إلغاء وضع التعديل والعودة للإنشاء
+    // إلغاء وضع التعديل
     cancelEditBtn.addEventListener('click', resetForm);
 
     function resetForm() {
@@ -369,7 +377,7 @@
       statusDiv.textContent = "";
     }
 
-    // دالة إنشاء رسم الـ QR Code
+    // دالة رسم الـ QR Code
     function renderQRCode(docId) {
       qrcodeDiv.innerHTML = '';
       const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
@@ -413,11 +421,9 @@
         let finalId = editingId;
 
         if (editingId) {
-          // تحديث الهدية القديمة بنفس الـ ID
           await db.collection('gifts').doc(editingId).update(payload);
           statusDiv.textContent = 'تم تحديث البيانات بنجاح لنفس الباركود!';
         } else {
-          // إضافة هدية جديدة
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
           const docRef = await db.collection('gifts').add(payload);
           finalId = docRef.id;
@@ -438,7 +444,8 @@
         statusDiv.className = 'status-message status-error';
       }
     });
-   // نسخ الرابط
+
+    // نسخ الرابط
     copyBtn.addEventListener('click', () => {
       if (currentGiftUrl) {
         navigator.clipboard.writeText(currentGiftUrl).then(() => {
@@ -447,38 +454,55 @@
           setTimeout(() => {
             copyBtn.textContent = originalText;
           }, 2000);
-            
-    const downloadQrBtn = document.getElementById('downloadQrBtn');
-    if (downloadQrBtn) {
-      downloadQrBtn.addEventListener('click', () => {
-        const qrCanvas = qrcodeDiv.querySelector('canvas');
-        const qrImg = qrcodeDiv.querySelector('img');
-
-        if (qrCanvas) {
-          const imageURI = qrCanvas.toDataURL("image/png");
-          const link = document.createElement('a');
-          link.href = imageURI;
-          link.download = 'gift-qr.png';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } else if (qrImg && qrImg.src) {
-          const link = document.createElement('a');
-          link.href = qrImg.src;
-          link.download = 'gift-qr.png';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } else {
-          alert("الرجاء إنشاء رمز الـ QR أولاً   
-    
-          
         }).catch(err => {
           alert("فشل نسخ الرابط، يمكنك نسخه يدوياً: " + currentGiftUrl);
         });
       }
     });
- 
+
+    // تنزيل وحفظ صورة الـ QR مع دعم الاستوديو والمشاركة على الجوالات
+    downloadQrBtn.addEventListener('click', async () => {
+      const qrCanvas = qrcodeDiv.querySelector('canvas');
+      const qrImg = qrcodeDiv.querySelector('img');
+
+      let dataUrl = '';
+      if (qrCanvas) {
+        dataUrl = qrCanvas.toDataURL("image/png");
+      } else if (qrImg && qrImg.src) {
+        dataUrl = qrImg.src;
+      } else {
+        alert("الرجاء إنشاء رمز الـ QR أولاً!");
+        return;
+      }
+
+      try {
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const file = new File([blob], 'gift-qr.png', { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'رمز QR للهدية',
+            text: 'رمز الاستجابة السريعة الخاص بالهدية'
+          });
+        } else {
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = 'gift-qr.png';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      } catch (err) {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = 'gift-qr.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
   </script>
 
 </body>
