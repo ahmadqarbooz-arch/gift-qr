@@ -20,7 +20,7 @@
     }
 
     body {
-      background: #0d0f12;
+      background: #08090b;
       font-family: 'Cairo', sans-serif;
       min-height: 100vh;
       display: flex;
@@ -32,66 +32,142 @@
     }
 
     /* ---------------------------------- */
-    /* 1. غلاف الهدية والختم الذهبي (Unboxing) */
+    /* 1. شاشة الغلاف والظرف الفاخر (3D Unboxing) */
     /* ---------------------------------- */
     #welcomeScreen {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(circle, #1a1e26 0%, #0d0f12 100%);
+      background: radial-gradient(circle at center, #1a1e29 0%, #060709 100%);
       z-index: 9999;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       transition: opacity 0.8s ease, visibility 0.8s ease;
     }
 
-    .envelope-box {
-      text-align: center;
-      max-width: 380px;
-      width: 90%;
-      position: relative;
+    .welcome-title {
+      color: #fff;
+      font-size: 1.4rem;
+      margin-bottom: 25px;
+      font-family: 'Cairo', sans-serif;
+      text-shadow: 0 0 10px rgba(224, 191, 115, 0.3);
     }
 
-    .wax-seal-btn {
-      width: 95px;
-      height: 95px;
-      background: radial-gradient(circle, #f39c12, #d4af37, #9a7d0a);
+    /* مجسم الظرف الفاخر */
+    .envelope-container {
+      position: relative;
+      width: 320px;
+      height: 210px;
+      background: #141720;
+      border-radius: 12px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 175, 55, 0.15);
+      border: 1px solid rgba(224, 191, 115, 0.35);
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    /* غطاء الظرف العلو المثلث (Flap) */
+    .envelope-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 160px solid transparent;
+      border-right: 160px solid transparent;
+      border-top: 115px solid #1c212d;
+      transform-origin: top;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 4;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+    }
+
+    /* جيب الظرف السفلي والجانبي */
+    .envelope-pocket {
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0; height: 0;
+      border-left: 160px solid #101218;
+      border-right: 160px solid #101218;
+      border-bottom: 110px solid #171b24;
+      border-radius: 0 0 12px 12px;
+      z-index: 3;
+    }
+
+    /* الختم الذهبي (Wax Seal) */
+    .wax-seal {
+      position: absolute;
+      top: 78px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 78px;
+      height: 78px;
+      background: radial-gradient(circle, #f5d77f 0%, #d4af37 60%, #8a6d1c 100%);
       border-radius: 50%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      margin: 25px auto 0 auto;
-      box-shadow: 0 0 25px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(0,0,0,0.3);
-      border: 3px solid #ffe89c;
-      cursor: pointer;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
-      animation: pulseGlow 2s infinite alternate;
+      z-index: 5;
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.6), inset 0 0 8px rgba(0,0,0,0.4);
+      border: 2px solid #fff3c4;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: sealPulse 2s infinite alternate;
     }
 
-    .wax-seal-btn:hover {
-      transform: scale(1.08) rotate(3deg);
-      box-shadow: 0 0 35px rgba(212, 175, 55, 0.8);
-    }
-
-    .seal-logo {
-      font-family: 'Amiri', serif;
-      font-size: 1rem;
-      font-weight: bold;
-      color: #111;
-      line-height: 1.1;
-    }
-
-    .seal-icon {
-      font-size: 1.2rem;
-      color: #111;
+    .wax-seal i {
+      font-size: 1.1rem;
+      color: #12141a;
       margin-bottom: 2px;
+    }
+
+    .wax-seal span {
+      font-family: 'Amiri', serif;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #12141a;
+      line-height: 1;
+    }
+
+    .envelope-container:hover .wax-seal {
+      transform: translateX(-50%) scale(1.08);
+      box-shadow: 0 0 30px rgba(212, 175, 55, 0.9);
+    }
+
+    /* حركة فتح الظرف عند النقر */
+    .envelope-container.open .envelope-flap {
+      transform: rotateX(180deg);
+      z-index: 1;
+    }
+
+    /* تأثير الوميض الساطع (Flash Glow) */
+    .flash-overlay {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 10px; height: 10px;
+      background: radial-gradient(circle, rgba(255,245,210,1) 0%, rgba(212,175,55,0.8) 40%, transparent 70%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .flash-overlay.active {
+      animation: flashGlow 0.9s ease-out forwards;
+    }
+
+    @keyframes flashGlow {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      50% { transform: translate(-50%, -50%) scale(90); opacity: 0.85; }
+      100% { transform: translate(-50%, -50%) scale(180); opacity: 0; }
     }
 
     .open-hint {
       color: #d4af37;
       font-size: 0.95rem;
-      margin-top: 15px;
+      margin-top: 30px;
       letter-spacing: 0.5px;
     }
 
@@ -100,9 +176,9 @@
       color: #e0bf73;
     }
 
-    @keyframes pulseGlow {
-      from { box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
-      to { box-shadow: 0 0 30px rgba(212, 175, 55, 0.8); }
+    @keyframes sealPulse {
+      from { box-shadow: 0 0 12px rgba(212, 175, 55, 0.4); }
+      to { box-shadow: 0 0 25px rgba(212, 175, 55, 0.8); }
     }
 
     /* ---------------------------------- */
@@ -114,7 +190,7 @@
       border: 3px solid #dfb15b;
       outline: 2px solid #e0bf73;
       outline-offset: -6px;
-      padding: 35px 25px 90px 25px; /* مساحة متناسقة مع الشريط السفلي */
+      padding: 35px 25px 90px 25px;
       border-radius: 16px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
       max-width: 500px;
@@ -232,21 +308,28 @@
 </head>
 <body>
 
-  <!-- شاشة الغلاف والختم الذهبي -->
+  <!-- شاشة الغلاف والظرف الفاخر 3D -->
   <div id="welcomeScreen">
-    <div class="envelope-box">
-      <div id="loading" class="loading-text">جاري تحميل الهدية...</div>
-      <div id="readyContent" style="display: none;">
-        <h2 style="color: #fff; font-size: 1.4rem;">لديك هدية خاصة ✨</h2>
+    <div id="loading" class="loading-text">جاري تحميل الهدية...</div>
+    
+    <div id="readyContent" style="display: none; text-align: center;">
+      <h2 class="welcome-title">لديك هدية خاصة ✨</h2>
+      
+      <!-- مجسم الظرف الفاخر -->
+      <div class="envelope-container" id="envelopeBox">
+        <div class="envelope-flap"></div>
+        <div class="envelope-pocket"></div>
         
         <!-- الختم الذهبي -->
-        <div class="wax-seal-btn" id="openBtn">
-          <i class="fa-solid fa-gift seal-icon"></i>
-          <span class="seal-logo">نبض الذكريات</span>
+        <div class="wax-seal" id="openBtn">
+          <i class="fa-solid fa-gift"></i>
+          <span>نبض الذكريات</span>
         </div>
-        
-        <p class="open-hint">اضغط على الختم لفتح الهدية 🎁</p>
+
+        <div class="flash-overlay" id="flashOverlay"></div>
       </div>
+      
+      <p class="open-hint">اضغط على الختم لفتح الهدية 🎁</p>
     </div>
   </div>
 
@@ -292,7 +375,6 @@
 
     let giftData = null;
 
-    // الحصول على ID الهدية من رابط الصفحة (?id=XXX)
     const urlParams = new URLSearchParams(window.location.search);
     const giftId = urlParams.get('id');
 
@@ -317,7 +399,7 @@
       }
     }
 
-    // تأثير تساقط الورود (Rose Petals Animation)
+    // تأثير تساقط الورود (Confetti)
     function triggerRosePetals() {
       const duration = 4 * 1000;
       const animationEnd = Date.now() + duration;
@@ -348,7 +430,6 @@
       }());
     }
 
-    // التنقل السلس عبر الشريط السفلي
     function scrollToElement(id) {
       const el = document.getElementById(id);
       if (el && el.style.display !== 'none') {
@@ -356,44 +437,55 @@
       }
     }
 
-    // فتح الهدية وعرض البيانات
-    document.getElementById('openBtn').addEventListener('click', () => {
-      // إخفاء غلاف الفتح بنعومة
-      const welcomeScreen = document.getElementById('welcomeScreen');
-      welcomeScreen.style.opacity = '0';
+    // تشغيل أنيميشن الفتح والوميض عند النقر على الظرف
+    document.getElementById('envelopeBox').addEventListener('click', () => {
+      const envelope = document.getElementById('envelopeBox');
+      const flash = document.getElementById('flashOverlay');
+      
+      // 1. فتح غطاء الظرف
+      envelope.classList.add('open');
+
+      // 2. انطلاق الوميض الساطع
       setTimeout(() => {
-        welcomeScreen.style.display = 'none';
-      }, 800);
+        flash.classList.add('active');
+      }, 350);
 
-      // تعبئة البيانات
-      if (giftData.occasion) {
-        const badge = document.getElementById('occasionBadge');
-        badge.textContent = giftData.occasion;
-        badge.style.display = 'inline-block';
-      }
+      // 3. إخفاء غلاف الترحيب وعرض بيانات الهدية
+      setTimeout(() => {
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        welcomeScreen.style.opacity = '0';
 
-      document.getElementById('recipientName').textContent = giftData.recipientName || '';
-      document.getElementById('message').textContent = giftData.message || '';
+        if (giftData.occasion) {
+          const badge = document.getElementById('occasionBadge');
+          badge.textContent = giftData.occasion;
+          badge.style.display = 'inline-block';
+        }
 
-      if (giftData.imageUrl) {
-        const img = document.getElementById('giftImage');
-        img.src = giftData.imageUrl;
-        img.style.display = 'block';
-      }
+        document.getElementById('recipientName').textContent = giftData.recipientName || '';
+        document.getElementById('message').textContent = giftData.message || '';
 
-      if (giftData.audioUrl) {
-        const audio = document.getElementById('audioPlayer');
-        audio.src = giftData.audioUrl;
-        document.getElementById('audioContainer').style.display = 'block';
-        audio.play().catch(e => console.log("تنبيه: يتطلب إذن التفاعل لتمكين التشغيل التلقائي للصوت."));
-      }
+        if (giftData.imageUrl) {
+          const img = document.getElementById('giftImage');
+          img.src = giftData.imageUrl;
+          img.style.display = 'block';
+        }
 
-      // إظهار بطاقة الهدية والشريط السفلي
-      document.getElementById('certificate').style.display = 'block';
-      document.getElementById('bottomNav').style.display = 'flex';
+        if (giftData.audioUrl) {
+          const audio = document.getElementById('audioPlayer');
+          audio.src = giftData.audioUrl;
+          document.getElementById('audioContainer').style.display = 'block';
+          audio.play().catch(e => console.log("تنبيه: يتطلب إذن التفاعل لتمكين التشغيل التلقائي للصوت."));
+        }
 
-      // تشغيل تأثير الورود
-      triggerRosePetals();
+        document.getElementById('certificate').style.display = 'block';
+        document.getElementById('bottomNav').style.display = 'flex';
+
+        triggerRosePetals();
+
+        setTimeout(() => {
+          welcomeScreen.style.display = 'none';
+        }, 500);
+      }, 850);
     });
 
     fetchGift();
