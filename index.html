@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- مكتبة Canvas Confetti لتساقط الورود والشرار -->
+  <!-- مكتبة Canvas Confetti لتساقط الورود -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -112,7 +112,7 @@
       z-index: 5;
       box-shadow: 0 0 20px rgba(212, 175, 55, 0.6), inset 0 0 8px rgba(0,0,0,0.4);
       border: 2px solid #fff3c4;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.5s ease;
       animation: sealPulse 2s infinite alternate;
     }
 
@@ -135,7 +135,31 @@
       box-shadow: 0 0 30px rgba(212, 175, 55, 0.9);
     }
 
-    /* حركة فتح الظرف عند النقر */
+    /* أنيميشن اختفاء وتلاشي الختم الذهبي عند النقر */
+    .wax-seal.dissolve {
+      animation: sealDissolve 0.6s ease-out forwards !important;
+      pointer-events: none;
+    }
+
+    @keyframes sealDissolve {
+      0% {
+        transform: translateX(-50%) scale(1) rotate(0deg);
+        opacity: 1;
+        filter: blur(0px);
+      }
+      50% {
+        transform: translateX(-50%) scale(1.3) rotate(15deg);
+        opacity: 0.6;
+        filter: blur(2px);
+      }
+      100% {
+        transform: translateX(-50%) scale(1.8) rotate(30deg);
+        opacity: 0;
+        filter: blur(8px);
+      }
+    }
+
+    /* حركة فتح الظرف */
     .envelope-container.open .envelope-flap {
       transform: rotateX(180deg);
       z-index: 1;
@@ -271,87 +295,7 @@
     }
 
     /* ---------------------------------- */
-    /* 3. زر المفاجأة السرية التفاعلي */
-    /* ---------------------------------- */
-    .secret-box-btn {
-      margin-top: 25px;
-      background: linear-gradient(135deg, #1c212d 0%, #08090b 100%);
-      color: #e0bf73;
-      border: 1px solid #dfb15b;
-      padding: 12px 24px;
-      border-radius: 25px;
-      font-family: 'Cairo', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .secret-box-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
-    }
-
-    /* النافذة المنبثقة للسر */
-    .secret-modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(8px);
-      z-index: 10000;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .secret-content {
-      background: #fff;
-      border: 2px solid #dfb15b;
-      padding: 30px 20px;
-      border-radius: 20px;
-      text-align: center;
-      max-width: 380px;
-      width: 100%;
-      color: #222;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      animation: popupIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .pulsing-heart {
-      font-size: 3.5rem;
-      color: #e84393;
-      margin: 15px 0;
-      animation: heartBeat 1s infinite alternate;
-      cursor: pointer;
-    }
-
-    @keyframes heartBeat {
-      to { transform: scale(1.2); }
-    }
-
-    @keyframes popupIn {
-      from { transform: scale(0.6); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    .close-modal-btn {
-      margin-top: 15px;
-      background: #dfb15b;
-      color: #111;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 15px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    /* ---------------------------------- */
-    /* 4. الشريط السفلي الزجاجي */
+    /* 3. الشريط السفلي الزجاجي (Glass Nav) */
     /* ---------------------------------- */
     .bottom-glass-nav {
       display: none;
@@ -440,24 +384,6 @@
     <div class="audio-container" id="audioContainer" style="display: none;">
       <audio id="audioPlayer" controls></audio>
     </div>
-
-    <!-- زر المفاجأة التفاعلي -->
-    <button class="secret-box-btn" onclick="openSecretModal()">
-      <i class="fa-solid fa-heart-pulse"></i>
-      <span>اضغط هنا لمفاجأة خاصة 🤍</span>
-    </button>
-  </div>
-
-  <!-- النافذة المنبثقة للمفاجأة السرية -->
-  <div class="secret-modal" id="secretModal">
-    <div class="secret-content">
-      <h3 style="font-family: 'Amiri', serif; font-size: 1.5rem; color: #1a1a1a;">بصمة حب لك ✨</h3>
-      <div class="pulsing-heart" onclick="triggerHeartBurst()">❤️</div>
-      <p style="font-family: 'Cairo', sans-serif; font-size: 0.95rem; color: #555;">
-        اضغط على القلب لتصلك آلاف المشاعر والبتلات الدائمة!
-      </p>
-      <button class="close-modal-btn" onclick="closeSecretModal()">إغلاق</button>
-    </div>
   </div>
 
   <!-- الشريط السفلي الزجاجي للمستلم -->
@@ -492,26 +418,6 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const giftId = urlParams.get('id');
-
-    // المؤثرات الصوتية المضافة
-    function playOpenSound() {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.3);
-      
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-      
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.3);
-    }
 
     async function fetchGift() {
       if (!giftId) {
@@ -558,26 +464,26 @@
       type();
     }
 
-    // تأثير تساقط الورود والشرارات الذهبية
+    // تأثير تساقط الورود (Confetti)
     function triggerRosePetals() {
       const duration = 4 * 1000;
       const animationEnd = Date.now() + duration;
 
-      const colors = ['#ffb7c5', '#e84393', '#fd79a8', '#d4af37', '#fdf3d8'];
+      const colors = ['#ffb7c5', '#e84393', '#fd79a8', '#d63031', '#f8a5c2'];
 
       (function frame() {
         confetti({
-          particleCount: 4,
+          particleCount: 3,
           angle: 60,
-          spread: 60,
+          spread: 55,
           origin: { x: 0, y: 0.6 },
           colors: colors,
           shapes: ['circle']
         });
         confetti({
-          particleCount: 4,
+          particleCount: 3,
           angle: 120,
-          spread: 60,
+          spread: 55,
           origin: { x: 1, y: 0.6 },
           colors: colors,
           shapes: ['circle']
@@ -589,25 +495,6 @@
       }());
     }
 
-    // تفجير قلوب عند الضغط على القلب داخل النافذة السرية
-    function triggerHeartBurst() {
-      confetti({
-        particleCount: 40,
-        spread: 80,
-        origin: { y: 0.6 },
-        colors: ['#e84393', '#d63031', '#fd79a8']
-      });
-    }
-
-    function openSecretModal() {
-      document.getElementById('secretModal').style.display = 'flex';
-      triggerHeartBurst();
-    }
-
-    function closeSecretModal() {
-      document.getElementById('secretModal').style.display = 'none';
-    }
-
     function scrollToElement(id) {
       const el = document.getElementById(id);
       if (el && el.style.display !== 'none') {
@@ -615,21 +502,28 @@
       }
     }
 
-    // تشغيل أنيميشن الفتح والوميض والكتابة والصوت
+    // تسلسل الحركة عند الضغط على الختم الذهبي
+    let isOpenTriggered = false;
     document.getElementById('envelopeBox').addEventListener('click', () => {
+      if (isOpenTriggered) return;
+      isOpenTriggered = true;
+
       const envelope = document.getElementById('envelopeBox');
+      const seal = document.getElementById('openBtn');
       const flash = document.getElementById('flashOverlay');
       
-      // 1. تشغيل صوت الفتح
-      try { playOpenSound(); } catch(e){}
+      // 1. تلاشي واختفاء الختم الذهبي باحترافية
+      seal.classList.add('dissolve');
 
-      // 2. فتح غطاء الظرف 3D
-      envelope.classList.add('open');
+      // 2. فتح غطاء الظرف بعد بداية تلاشي الختم
+      setTimeout(() => {
+        envelope.classList.add('open');
+      }, 250);
 
       // 3. انطلاق الوميض الساطع
       setTimeout(() => {
         flash.classList.add('active');
-      }, 350);
+      }, 500);
 
       // 4. إخفاء شاشة الغلاف وتجهيز كارت الهدية
       setTimeout(() => {
@@ -670,7 +564,7 @@
         setTimeout(() => {
           welcomeScreen.style.display = 'none';
         }, 500);
-      }, 850);
+      }, 1000);
     });
 
     fetchGift();
@@ -678,3 +572,4 @@
 
 </body>
 </html>
+
