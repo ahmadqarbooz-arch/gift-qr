@@ -238,6 +238,23 @@
       color: #333;
       margin: 20px 0;
       white-space: pre-wrap;
+      min-height: 60px;
+    }
+
+    /* مؤشر الكتابة المباشرة */
+    .typing-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 22px;
+      background-color: #d4af37;
+      margin-right: 3px;
+      vertical-align: middle;
+      animation: blink 0.7s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
     }
 
     .audio-container {
@@ -399,6 +416,30 @@
       }
     }
 
+    // تأثير كتابة النص الحية (Typing Effect)
+    function typeWriterEffect(text, elementId, speed = 50) {
+      const element = document.getElementById(elementId);
+      element.innerHTML = '';
+      
+      const cursor = document.createElement('span');
+      cursor.className = 'typing-cursor';
+      element.appendChild(cursor);
+
+      let i = 0;
+      function type() {
+        if (i < text.length) {
+          cursor.before(text.charAt(i));
+          i++;
+          setTimeout(type, speed);
+        } else {
+          setTimeout(() => {
+            cursor.remove();
+          }, 2000);
+        }
+      }
+      type();
+    }
+
     // تأثير تساقط الورود (Confetti)
     function triggerRosePetals() {
       const duration = 4 * 1000;
@@ -437,12 +478,12 @@
       }
     }
 
-    // تشغيل أنيميشن الفتح والوميض عند النقر على الظرف
+    // تشغيل أنيميشن الفتح والوميض والكتابة عند النقر على الظرف
     document.getElementById('envelopeBox').addEventListener('click', () => {
       const envelope = document.getElementById('envelopeBox');
       const flash = document.getElementById('flashOverlay');
       
-      // 1. فتح غطاء الظرف
+      // 1. فتح غطاء الظرف 3D
       envelope.classList.add('open');
 
       // 2. انطلاق الوميض الساطع
@@ -450,7 +491,7 @@
         flash.classList.add('active');
       }, 350);
 
-      // 3. إخفاء غلاف الترحيب وعرض بيانات الهدية
+      // 3. إخفاء شاشة الغلاف وتجهيز كارت الهدية
       setTimeout(() => {
         const welcomeScreen = document.getElementById('welcomeScreen');
         welcomeScreen.style.opacity = '0';
@@ -462,7 +503,6 @@
         }
 
         document.getElementById('recipientName').textContent = giftData.recipientName || '';
-        document.getElementById('message').textContent = giftData.message || '';
 
         if (giftData.imageUrl) {
           const img = document.getElementById('giftImage');
@@ -479,6 +519,11 @@
 
         document.getElementById('certificate').style.display = 'block';
         document.getElementById('bottomNav').style.display = 'flex';
+
+        // تشغيل تأثير كتابة النص الحية عند الظهور
+        if (giftData.message) {
+          typeWriterEffect(giftData.message, 'message', 45);
+        }
 
         triggerRosePetals();
 
