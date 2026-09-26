@@ -12,9 +12,6 @@
   <!-- مكتبة Canvas Confetti لتساقط الورود -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-  <!-- مكتبة الجزيئات الذهبية Particles.js -->
-  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-
   <style>
     * {
       box-sizing: border-box;
@@ -32,18 +29,6 @@
       padding: 15px;
       overflow-x: hidden;
       color: #fff;
-      position: relative;
-    }
-
-    /* خلفية الجزيئات الذهبية التفاعلية */
-    #particles-js {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      pointer-events: none;
     }
 
     /* ---------------------------------- */
@@ -82,12 +67,7 @@
         0 20px 45px rgba(0, 0, 0, 0.95),
         0 0 30px rgba(212, 175, 55, 0.3);
       perspective: 1000px;
-      cursor: grab;
-      touch-action: none;
-    }
-
-    .envelope-container:active {
-      cursor: grabbing;
+      cursor: pointer;
     }
 
     /* غطاء الظرف العلوي */
@@ -138,9 +118,8 @@
         inset 0 0 10px rgba(0, 0, 0, 0.6),
         0 4px 10px rgba(0,0,0,0.8);
       border: 3px solid #fff3c4;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       animation: sealPulse 2s infinite alternate;
-      user-select: none;
     }
 
     .wax-seal i {
@@ -158,7 +137,7 @@
     }
 
     .envelope-container:hover .wax-seal {
-      transform: translateX(-50%) scale(1.08);
+      transform: translateX(-50%) scale(1.1);
       box-shadow: 0 0 35px rgba(212, 175, 55, 1);
     }
 
@@ -229,7 +208,6 @@
       text-align: center;
       position: relative;
       color: #1a1a1a;
-      z-index: 10;
       animation: fadeInUp 0.8s ease-out forwards;
     }
 
@@ -281,6 +259,7 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.25);
     }
 
+    /* عرض النص الطبيعي والواضح دون تأثيرات */
     .message-body {
       font-family: 'Amiri', serif;
       font-size: 22px;
@@ -360,12 +339,6 @@
 </head>
 <body>
 
-  <!-- خلفية الجزيئات الذهبية المتحركة -->
-  <div id="particles-js"></div>
-
-  <!-- صوت كسر الختم الشمعي وفتح الورق -->
-  <audio id="sealBreakSound" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3" preload="auto"></audio>
-
   <!-- شاشة الغلاف والظرف الفاخر 3D -->
   <div id="welcomeScreen">
     <div id="loading" class="loading-text">جاري تحميل الهدية...</div>
@@ -387,7 +360,7 @@
         <div class="flash-overlay" id="flashOverlay"></div>
       </div>
       
-      <p class="open-hint">اسحب الختم لأعلى أو اضغط لفتح الهدية 🎁</p>
+      <p class="open-hint">اضغط على الختم لفتح الهدية 🎁</p>
     </div>
   </div>
 
@@ -436,33 +409,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
-    // ------------------------------------
-    // 1. إعداد الجزيئات الذهبية Particles.js
-    // ------------------------------------
-    particlesJS("particles-js", {
-      "particles": {
-        "number": { "value": 45, "density": { "enable": true, "value_area": 800 } },
-        "color": { "value": "#d4af37" },
-        "shape": { "type": "circle" },
-        "opacity": { "value": 0.6, "random": true },
-        "size": { "value": 3.5, "random": true },
-        "line_linked": { "enable": false },
-        "move": { "enable": true, "speed": 1.2, "direction": "top", "random": true, "out_mode": "out" }
-      },
-      "interactivity": {
-        "detect_on": "canvas",
-        "events": {
-          "onhover": { "enable": true, "mode": "bubble" },
-          "onclick": { "enable": true, "mode": "repulse" }
-        },
-        "modes": {
-          "bubble": { "distance": 150, "size": 6, "duration": 2, "opacity": 1 },
-          "repulse": { "distance": 100, "duration": 0.4 }
-        }
-      },
-      "retina_detect": true
-    });
-
     const firebaseConfig = {
       projectId: "gift-qr-e2142"
     };
@@ -470,14 +416,17 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // حساب التليجرام الخاص بك والمستلم للتنبيهات
     const TELEGRAM_USER = "@Sy_ahmad_7";
+
     let giftData = null;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const giftId = urlParams.get('id');       
-    const shortCode = urlParams.get('c');    
+    const giftId = urlParams.get('id');       // المعلمة القديمة
+    const shortCode = urlParams.get('c');    // المعلمة الجديدة للرموز القصيرة
 
     async function fetchGift() {
+      // التأكد من وجود معلمة id أو c في رابط الهدية
       if (!giftId && !shortCode) {
         document.getElementById('loading').textContent = "رابط الهدية غير صحيح.";
         return;
@@ -487,11 +436,17 @@
         let docData = null;
 
         if (giftId) {
+          // 1. البحث بالطريقة القديمة باستخدام Document ID
           const doc = await db.collection('gifts').doc(giftId).get();
-          if (doc.exists) docData = doc.data();
+          if (doc.exists) {
+            docData = doc.data();
+          }
         } else if (shortCode) {
+          // 2. البحث بالطريقة الجديدة باستخدام shortCode
           const snap = await db.collection('gifts').where('shortCode', '==', shortCode).limit(1).get();
-          if (!snap.empty) docData = snap.docs[0].data();
+          if (!snap.empty) {
+            docData = snap.docs[0].data();
+          }
         }
 
         if (docData) {
@@ -511,6 +466,7 @@
     function triggerRosePetals() {
       const duration = 4 * 1000;
       const animationEnd = Date.now() + duration;
+
       const colors = ['#d4af37', '#ffe89e', '#f8a5c2', '#e84393', '#ffffff'];
 
       (function frame() {
@@ -544,32 +500,20 @@
       }
     }
 
-    // ------------------------------------
-    // 2. الفتح التفاعلي للظرف بالصوت والسحب
-    // ------------------------------------
-    let isOpened = false;
-    const envelope = document.getElementById('envelopeBox');
-    const sealBtn = document.getElementById('openBtn');
-    const sound = document.getElementById('sealBreakSound');
-
-    function openEnvelope() {
-      if (isOpened) return;
-      isOpened = true;
-
+    // تشغيل أنيميشن الفتح والوميض وعرض النص مباشرة
+    document.getElementById('envelopeBox').addEventListener('click', () => {
+      const envelope = document.getElementById('envelopeBox');
       const flash = document.getElementById('flashOverlay');
-
-      // تشغيل الصوت
-      if (sound) {
-        sound.currentTime = 0;
-        sound.play().catch(e => console.log("الصوت يتطلب إذن تفاعل"));
-      }
-
+      
+      // 1. فتح غطاء الظرف 3D
       envelope.classList.add('open');
 
+      // 2. انطلاق الوميض الساطع
       setTimeout(() => {
         flash.classList.add('active');
       }, 350);
 
+      // 3. إخفاء شاشة الغلاف وتجهيز كارت الهدية
       setTimeout(() => {
         const welcomeScreen = document.getElementById('welcomeScreen');
         welcomeScreen.style.opacity = '0';
@@ -595,6 +539,7 @@
           audio.play().catch(e => console.log("تنبيه: يتطلب إذن التفاعل لتمكين التشغيل التلقائي للصوت."));
         }
 
+        // عرض الرسالة مباشرة بدون طباعة تدريجية
         if (giftData.message) {
           document.getElementById('message').textContent = giftData.message;
         }
@@ -608,50 +553,66 @@
           welcomeScreen.style.display = 'none';
         }, 500);
       }, 850);
-    }
-
-    // دعم إيماءة السحب للأعلى (Drag / Swipe)
-    let startY = 0;
-    let isDragging = false;
-
-    sealBtn.addEventListener('mousedown', startDrag);
-    sealBtn.addEventListener('touchstart', startDrag, { passive: true });
-
-    window.addEventListener('mousemove', drag);
-    window.addEventListener('touchmove', drag, { passive: true });
-
-    window.addEventListener('mouseup', endDrag);
-    window.addEventListener('touchend', endDrag);
-
-    sealBtn.addEventListener('click', openEnvelope);
-
-    function startDrag(e) {
-      if (isOpened) return;
-      isDragging = true;
-      startY = e.touches ? e.touches[0].clientY : e.clientY;
-    }
-
-    function drag(e) {
-      if (!isDragging || isOpened) return;
-      const currentY = e.touches ? e.touches[0].clientY : e.clientY;
-      const diffY = startY - currentY;
-
-      if (diffY > 40) {
-        isDragging = false;
-        openEnvelope();
-      }
-    }
-
-    function endDrag() {
-      isDragging = false;
-    }
+    });
 
     // ------------------------------------
-    // 3. إرسال كلمة الشكر والتنبيه إلى التليجرام
+    // إرسال كلمة الشكر والتنبيه إلى التليجرام
     // ------------------------------------
     document.getElementById('likeBtn').addEventListener('click', () => {
       document.getElementById('feedbackForm').style.display = 'block';
       document.getElementById('likeBtn').style.display = 'none';
     });
 
-    document.getElementById('sendFeedbackBtn').addEventListener('
+    document.getElementById('sendFeedbackBtn').addEventListener('click', async () => {
+      const text = document.getElementById('feedbackText').value.trim();
+      if (!text) return alert("لطفاً اكتب كلمتك أو رأيك قبل الإرسال.");
+
+      const sendBtn = document.getElementById('sendFeedbackBtn');
+      sendBtn.disabled = true;
+      sendBtn.textContent = "جاري الإرسال...";
+
+      try {
+        // 1. تحديث بيانات الهدية في Firebase
+        let docRef;
+        if (shortCode) {
+          const snap = await db.collection('gifts').where('shortCode', '==', shortCode).limit(1).get();
+          if (!snap.empty) docRef = snap.docs[0].ref;
+        } else if (giftId) {
+          docRef = db.collection('gifts').doc(giftId);
+        }
+
+        if (docRef) {
+          await docRef.update({
+            feedback: text,
+            feedbackDate: new Date().toLocaleString('ar-EG'),
+            isLiked: true
+          });
+        }
+
+        // 2. تجهيز رسالة التنبيه
+        const recipientName = giftData ? (giftData.recipientName || giftData.recipient || 'المستلم') : 'المستلم';
+        const notificationMessage = `🔔 *إشعار رأي جديد - Pulse QR*\n\nقام (*${recipientName}*) بفتح الهدية وترك الرأي التالي:\n\n💬 "${text}"`;
+
+        // 3. الإرسال الفوري لـ Telegram CallMeBot
+        const apiUrl = `https://api.callmebot.com/text.php?user=${encodeURIComponent(TELEGRAM_USER)}&text=${encodeURIComponent(notificationMessage)}`;
+        
+        fetch(apiUrl, { mode: 'no-cors' }).then(() => {
+          alert("شكراً لك! تم إرسال رأيك بنجاح ❤️");
+          document.getElementById('feedbackForm').style.display = 'none';
+        }).catch(() => {
+          alert("شكراً لك! تم إرسال رأيك بنجاح ❤️");
+          document.getElementById('feedbackForm').style.display = 'none';
+        });
+
+      } catch (err) {
+        console.error("خطأ أثناء إرسال التقييم:", err);
+        alert("شكراً لك! تم إرسال رأيك بنجاح ❤️");
+        document.getElementById('feedbackForm').style.display = 'none';
+      }
+    });
+
+    fetchGift();
+  </script>
+
+</body>
+</html>
