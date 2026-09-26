@@ -40,27 +40,43 @@ function showError(msg) {
 
 // بدء التشغيل عند تحميل الصفحة
 window.addEventListener('DOMContentLoaded', async () => {
-  // قراءة الـ ID من معامِلات الرابط (URL Query Parameters)
+  // قراءة المعاملات من الرابط (URL Query Parameters)
   const urlParams = new URLSearchParams(window.location.search);
-  const giftId = urlParams.get('id');
+  const giftId = urlParams.get('id');       // المباشر للروابط القديمة الـ 100
+  const shortCode = urlParams.get('c');     // الرمز القصير للروابط الجديدة الخفيفة
 
-  // التأكد من وجود ID في الرابط
-  if (!giftId) {
+  // التأكد من وجود معرّف (إما ID قديم أو shortCode جديد)
+  if (!giftId && !shortCode) {
     showError('عذرًا، رابط الهدية غير مكتمل.');
     return;
   }
 
   try {
-    // جلب الهدية من Firestore باستخدام الـ ID
-    const docRef = db.collection('gifts').doc(giftId);
-    const doc = await docRef.get();
+    let data = null;
 
-    if (!doc.exists) {
+    // 1. التعامل مع الروابط القديمة (المعتمدة على id)
+    if (giftId) {
+      const docRef = db.collection('gifts').doc(giftId);
+      const doc = await docRef.get();
+
+      if (doc.exists) {
+        data = doc.data();
+      }
+    } 
+    // 2. التعامل مع الروابط الجديدة الخفيفة (المعتمدة على shortCode)
+    else if (shortCode) {
+      const snapshot = await db.collection('gifts').where('shortCode', '==', shortCode).limit(1).get();
+
+      if (!snapshot.empty) {
+        data = snapshot.docs[0].data();
+      }
+    }
+
+    // التحقق من وجود بيانات الهدية
+    if (!data) {
       showError('عذرًا، لم يتم العثور على هذه الهدية أو ربما تم حذفها.');
       return;
     }
-
-    const data = doc.data();
 
     // تعبئة البيانات في الشاشات
     recipientGreeting.textContent = `وصلتك هدية خاصة يا ${data.recipient}! 🎁`;
