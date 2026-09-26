@@ -11,8 +11,8 @@
   
   <!-- مكتبة Canvas Confetti لتساقط الورود -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  
-  <!-- مكتبة الجزيئات الذهبية المتحركة Particles.js -->
+
+  <!-- مكتبة الجزيئات الذهبية Particles.js -->
   <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 
   <style>
@@ -363,7 +363,7 @@
   <!-- خلفية الجزيئات الذهبية المتحركة -->
   <div id="particles-js"></div>
 
-  <!-- ملف الصوت الواقعي لكسر الختم وفتح الظرف الورقي -->
+  <!-- صوت كسر الختم الشمعي وفتح الورق -->
   <audio id="sealBreakSound" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3" preload="auto"></audio>
 
   <!-- شاشة الغلاف والظرف الفاخر 3D -->
@@ -373,7 +373,7 @@
     <div id="readyContent" style="display: none; text-align: center;">
       <h2 class="welcome-title">لديك هدية خاصة ✨</h2>
       
-      <!-- مجسم الظرف الفاخر التفاعلي -->
+      <!-- مجسم الظرف الفاخر -->
       <div class="envelope-container" id="envelopeBox">
         <div class="envelope-flap"></div>
         <div class="envelope-pocket"></div>
@@ -387,7 +387,7 @@
         <div class="flash-overlay" id="flashOverlay"></div>
       </div>
       
-      <p class="open-hint">اسحب الختم لأعلى أو انقر لفتح الهدية 🎁</p>
+      <p class="open-hint">اسحب الختم لأعلى أو اضغط لفتح الهدية 🎁</p>
     </div>
   </div>
 
@@ -437,7 +437,7 @@
 
   <script>
     // ------------------------------------
-    // 1. إعداد خلفية الجزيئات الذهبية Particles.js
+    // 1. إعداد الجزيئات الذهبية Particles.js
     // ------------------------------------
     particlesJS("particles-js", {
       "particles": {
@@ -545,7 +545,7 @@
     }
 
     // ------------------------------------
-    // 2. منطق فتح الظرف بالتفاعل والـ Drag/Swipe + الصوت الواقعي
+    // 2. الفتح التفاعلي للظرف بالصوت والسحب
     // ------------------------------------
     let isOpened = false;
     const envelope = document.getElementById('envelopeBox');
@@ -558,7 +558,7 @@
 
       const flash = document.getElementById('flashOverlay');
 
-      // تشغيل صوت كسر الختم الشمعي وفتح الورق الواقعي
+      // تشغيل الصوت
       if (sound) {
         sound.currentTime = 0;
         sound.play().catch(e => console.log("الصوت يتطلب إذن تفاعل"));
@@ -592,7 +592,7 @@
           const audio = document.getElementById('audioPlayer');
           audio.src = giftData.audioUrl;
           document.getElementById('audioContainer').style.display = 'block';
-          audio.play().catch(e => console.log("تنبيه: يتطلب إذن التفاعل للتشغيل"));
+          audio.play().catch(e => console.log("تنبيه: يتطلب إذن التفاعل لتمكين التشغيل التلقائي للصوت."));
         }
 
         if (giftData.message) {
@@ -610,9 +610,8 @@
       }, 850);
     }
 
-    // إضافة دعم السحب للأعلى (Drag / Swipe) على الختم والظرف
+    // دعم إيماءة السحب للأعلى (Drag / Swipe)
     let startY = 0;
-    let currentY = 0;
     let isDragging = false;
 
     sealBtn.addEventListener('mousedown', startDrag);
@@ -624,7 +623,6 @@
     window.addEventListener('mouseup', endDrag);
     window.addEventListener('touchend', endDrag);
 
-    // الفتح عند النقرة العادية أيضاً
     sealBtn.addEventListener('click', openEnvelope);
 
     function startDrag(e) {
@@ -635,10 +633,9 @@
 
     function drag(e) {
       if (!isDragging || isOpened) return;
-      currentY = e.touches ? e.touches[0].clientY : e.clientY;
+      const currentY = e.touches ? e.touches[0].clientY : e.clientY;
       const diffY = startY - currentY;
 
-      // إذا تم السحب للأعلى بأكثر من 40 بكسل يتم الفتح مباشرة
       if (diffY > 40) {
         isDragging = false;
         openEnvelope();
@@ -653,4 +650,8 @@
     // 3. إرسال كلمة الشكر والتنبيه إلى التليجرام
     // ------------------------------------
     document.getElementById('likeBtn').addEventListener('click', () => {
-    
+      document.getElementById('feedbackForm').style.display = 'block';
+      document.getElementById('likeBtn').style.display = 'none';
+    });
+
+    document.getElementById('sendFeedbackBtn').addEventListener('
