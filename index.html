@@ -407,18 +407,35 @@
     let giftData = null;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const giftId = urlParams.get('id');
+    const giftId = urlParams.get('id');       // المعلمة القديمة
+    const shortCode = urlParams.get('c');    // المعلمة الجديدة للرموز القصيرة
 
     async function fetchGift() {
-      if (!giftId) {
+      // التأكد من وجود معلمة id أو c في رابط الهدية
+      if (!giftId && !shortCode) {
         document.getElementById('loading').textContent = "رابط الهدية غير صحيح.";
         return;
       }
 
       try {
-        const doc = await db.collection('gifts').doc(giftId).get();
-        if (doc.exists) {
-          giftData = doc.data();
+        let docData = null;
+
+        if (giftId) {
+          // 1. البحث بالطريقة القديمة باستخدام Document ID
+          const doc = await db.collection('gifts').doc(giftId).get();
+          if (doc.exists) {
+            docData = doc.data();
+          }
+        } else if (shortCode) {
+          // 2. البحث بالطريقة الجديدة باستخدام shortCode
+          const snap = await db.collection('gifts').where('shortCode', '==', shortCode).limit(1).get();
+          if (!snap.empty) {
+            docData = snap.docs[0].data();
+          }
+        }
+
+        if (docData) {
+          giftData = docData;
           document.getElementById('loading').style.display = 'none';
           document.getElementById('readyContent').style.display = 'block';
         } else {
@@ -492,7 +509,7 @@
           badge.style.display = 'inline-block';
         }
 
-        document.getElementById('recipientName').textContent = giftData.recipientName || '';
+        document.getElementById('recipientName').textContent = giftData.recipientName || giftData.recipient || '';
 
         if (giftData.imageUrl) {
           const img = document.getElementById('giftImage');
