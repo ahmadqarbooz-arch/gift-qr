@@ -147,9 +147,9 @@
     }
 
     #qrcode img, #qrcode canvas {
-      padding: 10px;
-      background: #fff;
-      border: 1px solid #ddd;
+      padding: 16px;
+      background: #ffffff;
+      border: 1px solid #dddddd;
       border-radius: 8px;
     }
 
@@ -264,6 +264,16 @@
     let imageBase64 = "";
     let currentGiftUrl = "";
 
+    // دالة توليد رمز قصير فريد للطلبات الجديدة
+    function generateShortCode(length = 6) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
     // دالة لتقليل حجم الصورة تلقائياً
     function compressImage(file, maxWidth, quality, callback) {
       const reader = new FileReader();
@@ -313,32 +323,52 @@
       }
     });
 
-    // جلب بيانات الهدية للتعديل
+    // جلب بيانات الهدية للتعديل (يدعم المعرف المباشر أو الرمز القصير)
     document.getElementById('loadGiftBtn').addEventListener('click', async () => {
       let inputVal = document.getElementById('searchGiftId').value.trim();
       if (!inputVal) return;
 
       if (inputVal.includes('id=')) {
         inputVal = inputVal.split('id=')[1].split('&')[0];
+      } else if (inputVal.includes('c=')) {
+        inputVal = inputVal.split('c=')[1].split('&')[0];
       }
 
       statusDiv.textContent = 'جاري جلب البيانات...';
       statusDiv.className = 'status-message';
 
       try {
-        const doc = await db.collection('gifts').doc(inputVal).get();
+        let docData = null;
+        let docId = inputVal;
+        let shortCodeVal = null;
+
+        // البحث بالـ ID المباشر للطلبات القديمة
+        let doc = await db.collection('gifts').doc(inputVal).get();
         if (doc.exists) {
-          const data = doc.data();
-          editingDocIdInput.value = doc.id;
+          docData = doc.data();
+          shortCodeVal = docData.shortCode || null;
+        } else {
+          // البحث بالرمز القصير للطلبات الجديدة
+          const snap = await db.collection('gifts').where('shortCode', '==', inputVal).limit(1).get();
+          if (!snap.empty) {
+            doc = snap.docs[0];
+            docId = doc.id;
+            docData = doc.data();
+            shortCodeVal = docData.shortCode;
+          }
+        }
+
+        if (docData) {
+          editingDocIdInput.value = docId;
           
-          document.getElementById('recipientName').value = data.recipientName || '';
-          document.getElementById('occasion').value = data.occasion || '';
-          document.getElementById('message').value = data.message || '';
-          document.getElementById('audioUrl').value = data.audioUrl || '';
+          document.getElementById('recipientName').value = docData.recipientName || docData.recipient || '';
+          document.getElementById('occasion').value = docData.occasion || '';
+          document.getElementById('message').value = docData.message || '';
+          document.getElementById('audioUrl').value = docData.audioUrl || '';
           
-          if (data.imageUrl) {
-            imageBase64 = data.imageUrl;
-            imagePreview.src = data.imageUrl;
+          if (docData.imageUrl) {
+            imageBase64 = docData.imageUrl;
+            imagePreview.src = docData.imageUrl;
             imagePreview.style.display = 'block';
           } else {
             imageBase64 = "";
@@ -349,7 +379,8 @@
           submitBtn.textContent = "تحديث بيانات الهدية";
           cancelEditBtn.style.display = "block";
           
-          renderQRCode(doc.id);
+          // إعادة رسم الـ QR الأصلي الخاص بالهدية
+          renderQRCode(docId, shortCodeVal);
           statusDiv.textContent = 'تم جلب البيانات بنجاح، قم بتعديل البيانات المطلوبة وأكد الحفظ.';
           statusDiv.className = 'status-message status-success';
         } else {
@@ -377,19 +408,26 @@
       statusDiv.textContent = "";
     }
 
-    // دالة رسم الـ QR Code
-    function renderQRCode(docId) {
+    // دالة رسم الـ QR Code النقي ذو المربعات الكبيرة والأقل كثافة
+    function renderQRCode(docId, shortCode = null) {
       qrcodeDiv.innerHTML = '';
       const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-      currentGiftUrl = `${baseUrl}index.html?id=${docId}`;
 
+      // إذا كان الطلب قديمًا يربط بـ id، وإذا كان جديدًا يربط بالرمز القصير c=
+      if (shortCode) {
+        currentGiftUrl = `${baseUrl}index.html?c=${shortCode}`;
+      } else {
+        currentGiftUrl = `${baseUrl}index.html?id=${docId}`;
+      }
+
+      // إنشاء الـ QR النقي والقياسي
       new QRCode(qrcodeDiv, {
         text: currentGiftUrl,
-        width: 180,
-        height: 180,
-        colorDark: "#2c3e50",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
+        width: 350,                          // دقة عالية وواضحة جداً للطباعة الحرة والحفر
+        height: 350,
+        colorDark: "#000000",               // أسود صريح لتباين ناصع
+        colorLight: "#ffffff",              // خلفية بيضاء نقية
+        correctLevel: QRCode.CorrectLevel.L  // مستوى L يعطي أقل عدد مربعات وأوضح شكل نقي
       });
 
       previewLink.href = currentGiftUrl;
@@ -410,6 +448,7 @@
 
       const payload = {
         recipientName: recipientName,
+        recipient: recipientName, // لضمان التوافق مع كل صفحات العرض
         occasion: occasion || "",
         message: message,
         audioUrl: audioUrl || "",
@@ -419,19 +458,30 @@
 
       try {
         let finalId = editingId;
+        let activeShortCode = null;
 
         if (editingId) {
+          // تحديث الطلب السابق دون تغيير الـ shortCode الخاص به إن وجد
           await db.collection('gifts').doc(editingId).update(payload);
+          
+          const updatedDoc = await db.collection('gifts').doc(editingId).get();
+          if (updatedDoc.exists && updatedDoc.data().shortCode) {
+            activeShortCode = updatedDoc.data().shortCode;
+          }
           statusDiv.textContent = 'تم تحديث البيانات بنجاح لنفس الباركود!';
         } else {
+          // إنشاء طلب جديد فقط باستخدام shortCode جديد خفيف
+          activeShortCode = generateShortCode(6);
+          payload.shortCode = activeShortCode;
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          
           const docRef = await db.collection('gifts').add(payload);
           finalId = docRef.id;
           statusDiv.textContent = 'تم حفظ الهدية بنجاح!';
         }
 
         statusDiv.className = 'status-message status-success';
-        renderQRCode(finalId);
+        renderQRCode(finalId, activeShortCode);
 
         if (!editingId) {
           giftForm.reset();
@@ -460,7 +510,7 @@
       }
     });
 
-    // تنزيل وحفظ صورة الـ QR مع دعم الاستوديو والمشاركة على الجوالات
+    // تنزيل وحفظ صورة الـ QR مع دعم الاستوديو والمشاركة على الجوالات بدقة عالية
     downloadQrBtn.addEventListener('click', async () => {
       const qrCanvas = qrcodeDiv.querySelector('canvas');
       const qrImg = qrcodeDiv.querySelector('img');
