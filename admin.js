@@ -17,6 +17,16 @@ const giftUrlInput = document.getElementById('giftUrlInput');
 const copyBtn = document.getElementById('copyBtn');
 const qrcodeDiv = document.getElementById('qrcode');
 
+// دالة توليد كود قصير أعمى مكون من 6 أحرف وأرقام للطلبات الجديدة فقط
+function generateShortCode(length = 6) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 // عند تقديم النموذج
 giftForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -34,30 +44,41 @@ giftForm.addEventListener('submit', async (e) => {
   submitBtn.textContent = 'جاري إنشاء الهدية... ⏳';
 
   try {
-    // إضافة الهدية إلى مجموعة gifts في Firestore
+    // توليد كود قصير محلي فريد للطلب الجديد
+    const shortCode = generateShortCode(6);
+
+    // إضافة الهدية إلى مجموعة gifts في Firestore مع حفظ الـ shortCode للطلبات الجديدة فقط
     const docRef = await db.collection('gifts').add({
       recipient: recipient,
       message: message,
       imageUrl: imageUrl || null,
+      shortCode: shortCode, // حقل الرمز القصير للطلبات الجديدة
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    // بناء الرابط المباشر للهدية مع الـ ID
+    // بناء الرابط القصير للهدية الجديدة
     const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-    const giftUrl = `${baseUrl}/index.html?id=${docRef.id}`;
+    const giftUrl = `${baseUrl}/index.html?c=${shortCode}`;
 
     // عرض النتيجة والرابط
     giftUrlInput.value = giftUrl;
     
-    // إنشاء الـ QR Code
+    // إنشاء الـ QR Code الجديد الخفيف والقياسي
     qrcodeDiv.innerHTML = '';
+    
+    // ضبط أنماط الهامش الأبيض (Quiet Zone) والحاوية للطباعة
+    qrcodeDiv.style.padding = "16px";
+    qrcodeDiv.style.backgroundColor = "#ffffff";
+    qrcodeDiv.style.display = "inline-block";
+    qrcodeDiv.style.borderRadius = "8px";
+
     new QRCode(qrcodeDiv, {
       text: giftUrl,
-      width: 180,
-      height: 180,
-      colorDark: "#2b2b2b",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.H
+      width: 300,                  // دقة عالية وواضحة جداً عند الطباعة
+      height: 300,                 // دقة عالية وواضحة جداً عند الطباعة
+      colorDark: "#000000",        // لون غامق أسود صريح لتباين عالٍ
+      colorLight: "#ffffff",       // خلفية بيضاء نقية
+      correctLevel: QRCode.CorrectLevel.L // مستوى L لأقل كثافة ممكنة وأسهل قراءة
     });
 
     resultDiv.classList.remove('hidden');
