@@ -17,7 +17,7 @@ const giftUrlInput = document.getElementById('giftUrlInput');
 const copyBtn = document.getElementById('copyBtn');
 const qrcodeDiv = document.getElementById('qrcode');
 
-// دالة توليد كود قصير أعمى مكون من 6 أحرف وأرقام للطلبات الجديدة فقط
+// دالة توليد كود قصير مكون من 6 أحرف وأرقام للطلبات الجديدة
 function generateShortCode(length = 6) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -47,38 +47,37 @@ giftForm.addEventListener('submit', async (e) => {
     // توليد كود قصير محلي فريد للطلب الجديد
     const shortCode = generateShortCode(6);
 
-    // إضافة الهدية إلى مجموعة gifts في Firestore مع حفظ الـ shortCode للطلبات الجديدة فقط
+    // إضافة الهدية إلى مجموعة gifts في Firestore
     const docRef = await db.collection('gifts').add({
       recipient: recipient,
       message: message,
       imageUrl: imageUrl || null,
-      shortCode: shortCode, // حقل الرمز القصير للطلبات الجديدة
+      shortCode: shortCode,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    // بناء الرابط القصير للهدية الجديدة
+    // بناء الرابط القصير المباشر
     const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
     const giftUrl = `${baseUrl}/index.html?c=${shortCode}`;
 
     // عرض النتيجة والرابط
     giftUrlInput.value = giftUrl;
     
-    // إنشاء الـ QR Code الجديد الخفيف والقياسي
+    // تفريغ الحاوية وتنسيق الهامش الأبيض الصافي للحفر والطباعة
     qrcodeDiv.innerHTML = '';
-    
-    // ضبط أنماط الهامش الأبيض (Quiet Zone) والحاوية للطباعة
-    qrcodeDiv.style.padding = "16px";
+    qrcodeDiv.style.padding = "20px";
     qrcodeDiv.style.backgroundColor = "#ffffff";
     qrcodeDiv.style.display = "inline-block";
     qrcodeDiv.style.borderRadius = "8px";
 
+    // إنشاء كود الـ QR النقي جداً وبمربعات كبيرة واضحة (Low Error Correction Level)
     new QRCode(qrcodeDiv, {
       text: giftUrl,
-      width: 300,                  // دقة عالية وواضحة جداً عند الطباعة
-      height: 300,                 // دقة عالية وواضحة جداً عند الطباعة
-      colorDark: "#000000",        // لون غامق أسود صريح لتباين عالٍ
-      colorLight: "#ffffff",       // خلفية بيضاء نقية
-      correctLevel: QRCode.CorrectLevel.L // مستوى L لأقل كثافة ممكنة وأسهل قراءة
+      width: 350,                          // حجم ممتاز ودقة عالية
+      height: 350,
+      colorDark: "#000000",               // أسود صريح لتباين عالٍ
+      colorLight: "#ffffff",              // خلفية بيضاء نقية
+      correctLevel: QRCode.CorrectLevel.L  // مستوى L يقلل التعقيد ويعطي مربعات كبيرة ونقية
     });
 
     resultDiv.classList.remove('hidden');
