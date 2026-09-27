@@ -131,6 +131,47 @@
     .status-success { color: #27ae60; }
     .status-error { color: #e74c3c; }
 
+    /* منطقة المعاينة المتعددة للصور */
+    .images-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .preview-item {
+      position: relative;
+      width: 100%;
+      height: 80px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1.5px solid var(--primary-color);
+    }
+
+    .preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .preview-item .remove-btn {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      background: rgba(231, 76, 60, 0.9);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      padding: 0;
+    }
+
     /* منطقة الـ QR Code وزر المعاينة */
     #qrContainer {
       display: none;
@@ -153,16 +194,6 @@
       border-radius: 8px;
     }
 
-    .image-preview {
-      max-width: 100%;
-      max-height: 150px;
-      margin-top: 10px;
-      border-radius: 8px;
-      display: none;
-      object-fit: cover;
-    }
-
-    /* إضافة صندوق التعديل في أعلى اللوحة */
     .search-box {
       background: #f8f9fa;
       padding: 15px;
@@ -187,7 +218,6 @@
     </div>
 
     <form id="giftForm">
-      <!-- حقل مخفي لضبط معرف الهدية الجاري تعديلها -->
       <input type="hidden" id="editingDocId" value="">
 
       <div class="form-group">
@@ -211,9 +241,9 @@
       </div>
 
       <div class="form-group">
-        <label for="imageFile">اختيار صورة الهدية (من الجهاز/الجوال)</label>
-        <input type="file" id="imageFile" accept="image/*">
-        <img id="imagePreview" class="image-preview" alt="معاينة الصورة">
+        <label for="imageFile">اختيار صور الهدية (يمكنك اختيار أكثر من صورة)</label>
+        <input type="file" id="imageFile" accept="image/*" multiple>
+        <div id="imagesPreviewGrid" class="images-preview-grid"></div>
       </div>
 
       <button type="submit" id="submitBtn">حفظ الهدية</button>
@@ -222,7 +252,7 @@
 
     <div id="status" class="status-message"></div>
 
-    <!-- قسم الـ QR Code والإجراءات بعد الحفظ -->
+    <!-- قسم الـ QR Code الإجراءات بعد الحفظ -->
     <div id="qrContainer">
       <h3 style="color: #2c3e50; margin-bottom: 10px;">رمز QR للهدية</h3>
       <div id="qrcode"></div>
@@ -250,7 +280,7 @@
     const giftForm = document.getElementById('giftForm');
     const statusDiv = document.getElementById('status');
     const imageFileInput = document.getElementById('imageFile');
-    const imagePreview = document.getElementById('imagePreview');
+    const imagesPreviewGrid = document.getElementById('imagesPreviewGrid');
     const qrContainer = document.getElementById('qrContainer');
     const qrcodeDiv = document.getElementById('qrcode');
     const copyBtn = document.getElementById('copyBtn');
@@ -261,10 +291,10 @@
     const submitBtn = document.getElementById('submitBtn');
     const cancelEditBtn = document.getElementById('cancelEditBtn');
 
-    let imageBase64 = "";
+    // مصفوفة تخزين الصور المرفقة
+    let imagesList = []; 
     let currentGiftUrl = "";
 
-    // دالة توليد رمز قصير فريد للطلبات الجديدة
     function generateShortCode(length = 6) {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let result = '';
@@ -274,7 +304,6 @@
       return result;
     }
 
-    // دالة لتقليل حجم الصورة تلقائياً
     function compressImage(file, maxWidth, quality, callback) {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -303,27 +332,50 @@
       };
     }
 
-    // معاينة الصورة المختارة وضغطها
+    // عرض وإعادة رسم شبكة الصور
+    function renderPreviewGrid() {
+      imagesPreviewGrid.innerHTML = '';
+      imagesList.forEach((imgBase64, index) => {
+        const item = document.createElement('div');
+        item.className = 'preview-item';
+        item.innerHTML = `
+          <img src="${imgBase64}" alt="صورة ${index + 1}">
+          <button type="button" class="remove-btn" onclick="removeImage(${index})">✕</button>
+        `;
+        imagesPreviewGrid.appendChild(item);
+      });
+    }
+
+    window.removeImage = function(index) {
+      imagesList.splice(index, 1);
+      renderPreviewGrid();
+    };
+
+    // إضافة الصور وضغطها
     imageFileInput.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        statusDiv.textContent = 'جاري تجهيز الصورة...';
+      const files = Array.from(e.target.files);
+      if (files.length > 0) {
+        statusDiv.textContent = 'جاري ضغط ومعالجة الصور...';
         statusDiv.className = 'status-message';
 
-        compressImage(file, 800, 0.7, function(compressedBase64) {
-          imageBase64 = compressedBase64;
-          imagePreview.src = imageBase64;
-          imagePreview.style.display = 'block';
-          statusDiv.textContent = 'تم إرفاق الصورة بنجاح!';
-          statusDiv.className = 'status-message status-success';
+        let processedCount = 0;
+        files.forEach(file => {
+          compressImage(file, 800, 0.7, function(compressedBase64) {
+            imagesList.push(compressedBase64);
+            processedCount++;
+
+            if (processedCount === files.length) {
+              renderPreviewGrid();
+              statusDiv.textContent = 'تم إرفاق ومعالجة الصور بنجاح!';
+              statusDiv.className = 'status-message status-success';
+              imageFileInput.value = ''; // تفريغ المدخل لإتاحة رفع صور أخرى
+            }
+          });
         });
-      } else if (!editingDocIdInput.value) {
-        imageBase64 = "";
-        imagePreview.style.display = 'none';
       }
     });
 
-    // جلب بيانات الهدية للتعديل (يدعم المعرف المباشر أو الرمز القصير)
+    // جلب بيانات الهدية للتعديل
     document.getElementById('loadGiftBtn').addEventListener('click', async () => {
       let inputVal = document.getElementById('searchGiftId').value.trim();
       if (!inputVal) return;
@@ -342,13 +394,11 @@
         let docId = inputVal;
         let shortCodeVal = null;
 
-        // البحث بالـ ID المباشر للطلبات القديمة
         let doc = await db.collection('gifts').doc(inputVal).get();
         if (doc.exists) {
           docData = doc.data();
           shortCodeVal = docData.shortCode || null;
         } else {
-          // البحث بالرمز القصير للطلبات الجديدة
           const snap = await db.collection('gifts').where('shortCode', '==', inputVal).limit(1).get();
           if (!snap.empty) {
             doc = snap.docs[0];
@@ -366,20 +416,20 @@
           document.getElementById('message').value = docData.message || '';
           document.getElementById('audioUrl').value = docData.audioUrl || '';
           
-          if (docData.imageUrl) {
-            imageBase64 = docData.imageUrl;
-            imagePreview.src = docData.imageUrl;
-            imagePreview.style.display = 'block';
-          } else {
-            imageBase64 = "";
-            imagePreview.style.display = 'none';
+          // دمج واسترجاع الصور (سواء كانت مصفوفة جديدة أورسوم قديمة مفردة)
+          imagesList = [];
+          if (docData.imageUrls && Array.isArray(docData.imageUrls)) {
+            imagesList = docData.imageUrls;
+          } else if (docData.imageUrl) {
+            imagesList = [docData.imageUrl];
           }
+
+          renderPreviewGrid();
 
           formTitle.textContent = "تعديل الهدية";
           submitBtn.textContent = "تحديث بيانات الهدية";
           cancelEditBtn.style.display = "block";
           
-          // إعادة رسم الـ QR الأصلي الخاص بالهدية
           renderQRCode(docId, shortCodeVal);
           statusDiv.textContent = 'تم جلب البيانات بنجاح، قم بتعديل البيانات المطلوبة وأكد الحفظ.';
           statusDiv.className = 'status-message status-success';
@@ -393,14 +443,13 @@
       }
     });
 
-    // إلغاء وضع التعديل
     cancelEditBtn.addEventListener('click', resetForm);
 
     function resetForm() {
       editingDocIdInput.value = "";
       giftForm.reset();
-      imageBase64 = "";
-      imagePreview.style.display = 'none';
+      imagesList = [];
+      renderPreviewGrid();
       formTitle.textContent = "إنشاء هدية جديدة";
       submitBtn.textContent = "حفظ الهدية";
       cancelEditBtn.style.display = "none";
@@ -408,26 +457,23 @@
       statusDiv.textContent = "";
     }
 
-    // دالة رسم الـ QR Code النقي ذو المربعات الكبيرة والأقل كثافة
     function renderQRCode(docId, shortCode = null) {
       qrcodeDiv.innerHTML = '';
       const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
 
-      // إذا كان الطلب قديمًا يربط بـ id، وإذا كان جديدًا يربط بالرمز القصير c=
       if (shortCode) {
         currentGiftUrl = `${baseUrl}index.html?c=${shortCode}`;
       } else {
         currentGiftUrl = `${baseUrl}index.html?id=${docId}`;
       }
 
-      // إنشاء الـ QR النقي والقياسي
       new QRCode(qrcodeDiv, {
         text: currentGiftUrl,
-        width: 350,                          // دقة عالية وواضحة جداً للطباعة الحرة والحفر
+        width: 350,
         height: 350,
-        colorDark: "#000000",               // أسود صريح لتباين ناصع
-        colorLight: "#ffffff",              // خلفية بيضاء نقية
-        correctLevel: QRCode.CorrectLevel.L  // مستوى L يعطي أقل عدد مربعات وأوضح شكل نقي
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.L
       });
 
       previewLink.href = currentGiftUrl;
@@ -448,11 +494,13 @@
 
       const payload = {
         recipientName: recipientName,
-        recipient: recipientName, // لضمان التوافق مع كل صفحات العرض
+        recipient: recipientName,
         occasion: occasion || "",
         message: message,
         audioUrl: audioUrl || "",
-        imageUrl: imageBase64 || "",
+        // حفظ مصفوفة الصور الجديدة + الصورة الأولى كرمز توافق قديم
+        imageUrls: imagesList,
+        imageUrl: imagesList.length > 0 ? imagesList[0] : "",
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
@@ -461,7 +509,6 @@
         let activeShortCode = null;
 
         if (editingId) {
-          // تحديث الطلب السابق دون تغيير الـ shortCode الخاص به إن وجد
           await db.collection('gifts').doc(editingId).update(payload);
           
           const updatedDoc = await db.collection('gifts').doc(editingId).get();
@@ -470,7 +517,6 @@
           }
           statusDiv.textContent = 'تم تحديث البيانات بنجاح لنفس الباركود!';
         } else {
-          // إنشاء طلب جديد فقط باستخدام shortCode جديد خفيف
           activeShortCode = generateShortCode(6);
           payload.shortCode = activeShortCode;
           payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
@@ -485,8 +531,8 @@
 
         if (!editingId) {
           giftForm.reset();
-          imagePreview.style.display = 'none';
-          imageBase64 = "";
+          imagesList = [];
+          renderPreviewGrid();
         }
       } catch (error) {
         console.error("Error saving document: ", error);
@@ -495,7 +541,6 @@
       }
     });
 
-    // نسخ الرابط
     copyBtn.addEventListener('click', () => {
       if (currentGiftUrl) {
         navigator.clipboard.writeText(currentGiftUrl).then(() => {
@@ -510,7 +555,6 @@
       }
     });
 
-    // تنزيل وحفظ صورة الـ QR مع دعم الاستوديو والمشاركة على الجوالات بدقة عالية
     downloadQrBtn.addEventListener('click', async () => {
       const qrCanvas = qrcodeDiv.querySelector('canvas');
       const qrImg = qrcodeDiv.querySelector('img');
