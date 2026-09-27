@@ -249,19 +249,13 @@
       text-shadow: 1px 1px 0px rgba(212, 175, 55, 0.3);
     }
 
-    /* حاوية معرض الصور لدعم صور متعددة */
-    .images-gallery {
-      display: none;
-      margin: 18px 0;
-    }
-
     .gift-image {
-      width: 100%;
-      max-height: 280px;
+      max-width: 100%;
+      max-height: 270px;
       object-fit: cover;
       border-radius: 14px;
       border: 3px solid #d4af37;
-      margin-bottom: 15px;
+      margin: 18px 0;
       box-shadow: 0 10px 25px rgba(0,0,0,0.25);
     }
 
@@ -374,10 +368,7 @@
   <div id="certificate" class="certificate-card">
     <div id="occasionBadge" class="occasion-badge" style="display: none;"></div>
     <h1 id="recipientName" class="recipient-title"></h1>
-    
-    <!-- حاوية الصور المعدلة لدعم صورة واحدة أو عدة صور -->
-    <div id="imagesGallery" class="images-gallery"></div>
-    
+    <img id="giftImage" class="gift-image" src="" alt="صورة الهدية" style="display: none;">
     <p id="message" class="message-body"></p>
     
     <div class="audio-container" id="audioContainer" style="display: none;">
@@ -403,9 +394,9 @@
       <i class="fa-solid fa-envelope-open-text"></i>
       <span>الرسالة</span>
     </button>
-    <button class="nav-btn" onclick="scrollToElement('imagesGallery')">
+    <button class="nav-btn" onclick="scrollToElement('giftImage')">
       <i class="fa-solid fa-image"></i>
-      <span>الصور</span>
+      <span>الصورة</span>
     </button>
     <button class="nav-btn" onclick="scrollToElement('audioContainer')">
       <i class="fa-solid fa-music"></i>
@@ -535,28 +526,10 @@
 
         document.getElementById('recipientName').textContent = giftData.recipientName || giftData.recipient || '';
 
-        // --- عرض جميع الصور المرفوعة (سواء كانت مفردة أو مصفوفة) ---
-        const gallery = document.getElementById('imagesGallery');
-        gallery.innerHTML = '';
-        
-        let allImages = [];
-        if (giftData.imageUrls && Array.isArray(giftData.imageUrls) && giftData.imageUrls.length > 0) {
-          allImages = giftData.imageUrls;
-        } else if (giftData.imageUrl) {
-          allImages = [giftData.imageUrl];
-        }
-
-        if (allImages.length > 0) {
-          allImages.forEach(url => {
-            if (url) {
-              const img = document.createElement('img');
-              img.src = url;
-              img.className = 'gift-image';
-              img.alt = 'صورة الهدية';
-              gallery.appendChild(img);
-            }
-          });
-          gallery.style.display = 'block';
+        if (giftData.imageUrl) {
+          const img = document.getElementById('giftImage');
+          img.src = giftData.imageUrl;
+          img.style.display = 'block';
         }
 
         if (giftData.audioUrl) {
@@ -632,4 +605,14 @@
         });
 
       } catch (err) {
-        console.error("خطأ أثناء إرسال التقييم:", 
+        console.error("خطأ أثناء إرسال التقييم:", err);
+        alert("شكراً لك! تم إرسال رأيك بنجاح ❤️");
+        document.getElementById('feedbackForm').style.display = 'none';
+      }
+    });
+
+    fetchGift();
+  </script>
+
+</body>
+</html>
