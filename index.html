@@ -480,8 +480,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const TELEGRAM_USER = "@Sy_ahmad_7";
-
     let giftData = null;
     let currentImageIndex = 0;
     let imagesArray = [];
@@ -502,7 +500,9 @@
         if (giftId) {
           const doc = await db.collection('gifts').doc(giftId).get();
           if (doc.exists) docData = doc.data();
-        } else if (shortCode) {
+        } 
+        
+        if (!docData && shortCode) {
           const snap = await db.collection('gifts').where('shortCode', '==', shortCode).limit(1).get();
           if (!snap.empty) docData = snap.docs[0].data();
         }
@@ -527,7 +527,6 @@
       }
     }
 
-    // إعداد وتشغيل معرض الصور (Slider)
     function setupGallery() {
       imagesArray = [];
       if (giftData.imageUrls && Array.isArray(giftData.imageUrls) && giftData.imageUrls.length > 0) {
@@ -596,7 +595,7 @@
     });
 
     function triggerRosePetals() {
-      const duration = 4 * 1000;
+      const duration = 3 * 1000;
       const animationEnd = Date.now() + duration;
       const colors = ['#d4af37', '#ffe89e', '#f8a5c2', '#e84393', '#ffffff'];
 
@@ -652,6 +651,10 @@
         const welcomeScreen = document.getElementById('welcomeScreen');
         welcomeScreen.style.opacity = '0';
 
+        setTimeout(() => {
+          welcomeScreen.style.display = 'none';
+        }, 800);
+
         if (giftData.occasion) {
           const badge = document.getElementById('occasionBadge');
           badge.textContent = giftData.occasion;
@@ -660,8 +663,7 @@
 
         document.getElementById('recipientName').textContent = giftData.recipientName || giftData.recipient || '';
 
-        // تفعيل المعرض وتعبئة الصور
         setupGallery();
 
         if (giftData.message) {
-  
+   
