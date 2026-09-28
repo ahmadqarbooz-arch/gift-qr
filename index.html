@@ -372,7 +372,7 @@
     <p id="message" class="message-body"></p>
     
     <div class="audio-container" id="audioContainer" style="display: none;">
-      <audio id="audioPlayer" controls preload="auto"></audio>
+      <audio id="audioPlayer" controls></audio>
     </div>
 
     <!-- قسم رأي المستلم وكلمة الشكر -->
@@ -451,14 +451,6 @@
 
         if (docData) {
           giftData = docData;
-          
-          // البدء بتحميل الصوت فوراً في الخلفية بمجرد استلام البيانات
-          if (giftData.audioUrl) {
-            const audio = document.getElementById('audioPlayer');
-            audio.src = giftData.audioUrl;
-            audio.load();
-          }
-
           document.getElementById('loading').style.display = 'none';
           document.getElementById('readyContent').style.display = 'block';
         } else {
@@ -542,6 +534,7 @@
 
         if (giftData.audioUrl) {
           const audio = document.getElementById('audioPlayer');
+          audio.src = giftData.audioUrl;
           document.getElementById('audioContainer').style.display = 'block';
           audio.play().catch(e => console.log("تنبيه: يتطلب إذن التفاعل لتمكين التشغيل التلقائي للصوت."));
         }
